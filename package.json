@@ -54,15 +54,7 @@
     "convex": "~1.16.5 || ~1.17.0"
   },
   "dependencies": {
-    "@types/react": "~18.2.79",
-    "convex-helpers": "^0.1.58",
-    "expo": "^51.0.32",
-    "expo-constants": "^16.0.2",
-    "expo-device": "^6.0.2",
-    "expo-notifications": "^0.28.16",
-    "expo-router": "^3.5.23",
-    "react-native": "^0.75.3",
-    "tamagui": "^1.110.3"
+    "convex-helpers": "^0.1.58"
   },
   "devDependencies": {
     "@eslint/js": "^9.9.1",
