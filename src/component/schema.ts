@@ -6,6 +6,7 @@ export const notificationFields = {
   body: v.optional(v.string()),
   sound: v.optional(v.string()),
   data: v.optional(v.any()),
+  channelId: v.optional(v.string()),
 };
 
 export type NotificationFields = ObjectType<typeof notificationFields>;
