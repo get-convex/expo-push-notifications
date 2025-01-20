@@ -149,6 +149,7 @@ export const coordinateSendingPushNotifications = internalMutation({
               title: n.metadata.title,
               body: n.metadata.body ?? undefined,
               data: n.metadata.data ?? undefined,
+              channelId: n.metadata.channelId ?? undefined,
             },
             _id: n._id,
           };
@@ -197,6 +198,7 @@ export const action_sendPushNotifications = internalAction({
           title: v.string(),
           body: v.optional(v.string()),
           data: v.optional(v.any()),
+          channelId: v.optional(v.string()),
         }),
         _id: v.id("notifications"),
       })
