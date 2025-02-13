@@ -26,7 +26,11 @@ export type NotificationFields = {
   body?: string;
 
   /**
-   * The sound to play for the notification.
+   * string | null
+   * 
+   * iOS Only
+   * 
+   * Play a sound when the recipient receives this notification. Specify default to play the device's default notification sound, or omit this field to play no sound. Custom sounds need to be configured via the config plugin and then specified including the file extension. Example: bells_sound.wav.
    */
   sound?: string;
 
@@ -36,7 +40,10 @@ export type NotificationFields = {
   data?: any;
 
   /**
-   * Android Only: ID of the Notification Channel through which to display this notification.
+   * string
+   * 
+   * Android Only
+   *  
    * If an ID is specified but the corresponding channel does not exist on the device (that has not yet been created by your app),
    * the notification will not be displayed to the user.
    */
