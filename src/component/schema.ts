@@ -8,15 +8,40 @@ export const notificationFields = {
   body: v.optional(v.string()),
   sound: v.optional(v.string()),
   data: v.optional(v.any()),
-  /**
-   * channelId: Android Only
-   * string
-   * ID of the Notification Channel through which to display this notification. If an ID is specified but the corresponding channel does not exist on the device (that has not yet been created by your app), the notification will not be displayed to the user.
-   */
   channelId: v.optional(v.string()),
 };
 
-export type NotificationFields = ObjectType<typeof notificationFields>;
+/**
+ * Notification fields for push notifications.
+ */
+export type NotificationFields = {
+  /**
+   * The title of the notification.
+   */
+  title: string;
+
+  /**
+   * The body of the notification.
+   */
+  body?: string;
+
+  /**
+   * The sound to play for the notification.
+   */
+  sound?: string;
+
+  /**
+   * Any additional data to send with the notification.
+   */
+  data?: any;
+
+  /**
+   * Android Only: ID of the Notification Channel through which to display this notification.
+   * If an ID is specified but the corresponding channel does not exist on the device (that has not yet been created by your app),
+   * the notification will not be displayed to the user.
+   */
+  channelId?: string;
+};
 
 export const notificationState = v.union(
   v.literal("awaiting_delivery"),
