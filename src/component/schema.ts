@@ -8,7 +8,11 @@ export const notificationFields = {
   body: v.optional(v.string()),
   sound: v.optional(v.string()),
   data: v.optional(v.any()),
-  // channelId is an Android-only field that allows you to specify a custom
+  /**
+   * channelId: Android Only
+   * string
+   * ID of the Notification Channel through which to display this notification. If an ID is specified but the corresponding channel does not exist on the device (that has not yet been created by your app), the notification will not be displayed to the user.
+   */
   channelId: v.optional(v.string()),
 };
 
