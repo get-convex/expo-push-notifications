@@ -89,6 +89,8 @@ export type NotificationFields = {
   subtitle?: string;
 
   /**
+   * iOS Only
+   * 
    * Play a sound when the recipient receives this notification. Specify default to play the device's default notification sound,
    * or omit this field to play no sound. Custom sounds need to be configured via the config plugin and
    * then specified including the file extension. Example: bells_sound.wav.
