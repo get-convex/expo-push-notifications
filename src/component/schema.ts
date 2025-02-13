@@ -1,11 +1,14 @@
 import { defineSchema, defineTable } from "convex/server";
 import { ObjectType, v } from "convex/values";
 
+// https://docs.expo.dev/push-notifications/sending-notifications/#message-request-format
+
 export const notificationFields = {
   title: v.string(),
   body: v.optional(v.string()),
   sound: v.optional(v.string()),
   data: v.optional(v.any()),
+  // channelId is an Android-only field that allows you to specify a custom
   channelId: v.optional(v.string()),
 };
 
