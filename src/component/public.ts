@@ -109,8 +109,8 @@ export const getNotification = query({
     if (!notification) {
       return null;
     }
-    const { metadata, numPreviousFailures, state } = notification;
-    return { ...metadata, numPreviousFailures, state };
+    const { metadata, numPreviousFailures, state, _creationTime } = notification;
+    return { ...metadata, numPreviousFailures, state, _creationTime };
   },
 });
 
@@ -143,7 +143,7 @@ export const getNotificationsForUser = query({
         ...metadata,
         state: state,
         numPreviousFailures: numPreviousFailures,
-        creationTime: _creationTime,
+        _creationTime,
       })
     );
   },
