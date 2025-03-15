@@ -138,11 +138,12 @@ export const getNotificationsForUser = query({
       .order("desc")
       .take(args.limit ?? DEFAULT_LIMIT);
     return notifications.map(
-      ({ _id, metadata, state, numPreviousFailures }) => ({
+      ({ _id, metadata, state, numPreviousFailures, _creationTime }) => ({
         id: _id,
         ...metadata,
         state: state,
         numPreviousFailures: numPreviousFailures,
+        creationTime: _creationTime,
       })
     );
   },
