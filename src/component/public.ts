@@ -102,6 +102,7 @@ export const getNotification = query({
       ...notificationFields,
       state: notificationState,
       numPreviousFailures: v.number(),
+      _creationTime: v.number(),
     })
   ),
   handler: async (ctx, args) => {
@@ -122,6 +123,7 @@ export const getNotificationsForUser = query({
       id: v.id("notifications"),
       state: notificationState,
       numPreviousFailures: v.number(),
+      _creationTime: v.number(),
     })
   ),
   handler: async (ctx, args) => {
