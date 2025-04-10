@@ -145,10 +145,20 @@ export const coordinateSendingPushNotifications = internalMutation({
           return {
             message: {
               to: n.token,
-              sound: n.metadata.sound ?? "default",
+              _contentAvailable: n.metadata._contentAvailable ?? undefined,
+              data: n.metadata.data ?? undefined,
               title: n.metadata.title,
               body: n.metadata.body ?? undefined,
-              data: n.metadata.data ?? undefined,
+              ttl: n.metadata.ttl ?? undefined,
+              expiration: n.metadata.expiration ?? undefined,
+              priority: n.metadata.priority ?? undefined,
+              subtitle: n.metadata.subtitle ?? undefined,
+              sound: n.metadata.sound ?? "default",
+              badge: n.metadata.badge ?? undefined,
+              interruptionLevel: n.metadata.interruptionLevel ?? undefined,
+              channelId: n.metadata.channelId ?? undefined,
+              categoryId: n.metadata.categoryId ?? undefined,
+              mutableContent: n.metadata.mutableContent ?? undefined,
             },
             _id: n._id,
           };
@@ -197,6 +207,7 @@ export const action_sendPushNotifications = internalAction({
           title: v.string(),
           body: v.optional(v.string()),
           data: v.optional(v.any()),
+          channelId: v.optional(v.string()),
         }),
         _id: v.id("notifications"),
       })
