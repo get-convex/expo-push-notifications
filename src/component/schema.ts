@@ -3,9 +3,11 @@ import { ObjectType, v } from "convex/values";
 
 export const notificationFields = {
   title: v.string(),
+  subtitle: v.optional(v.string()),
   body: v.optional(v.string()),
   sound: v.optional(v.string()),
   data: v.optional(v.any()),
+  categoryIdentifier: v.optional(v.string()),
 };
 
 export type NotificationFields = ObjectType<typeof notificationFields>;
