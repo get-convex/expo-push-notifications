@@ -54,7 +54,7 @@
     }
   },
   "peerDependencies": {
-    "convex": "~1.16.5 || >=1.17.0 <1.25.0"
+    "convex": ">=1.23.0 <1.35.0"
   },
   "dependencies": {
     "convex-helpers": "^0.1.58"
