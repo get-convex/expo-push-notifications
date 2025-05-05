@@ -47,7 +47,9 @@ export type Mounts = {
       "public",
       { id: string; logLevel: "DEBUG" | "INFO" | "WARN" | "ERROR" },
       null | {
+        _creationTime: number;
         body?: string;
+        categoryIdentifier?: string;
         data?: any;
         numPreviousFailures: number;
         sound?: string;
@@ -59,6 +61,7 @@ export type Mounts = {
           | "failed"
           | "maybe_delivered"
           | "unable_to_deliver";
+        subtitle?: string;
         title: string;
       }
     >;
@@ -71,7 +74,9 @@ export type Mounts = {
         userId: string;
       },
       Array<{
+        _creationTime: number;
         body?: string;
+        categoryIdentifier?: string;
         data?: any;
         id: string;
         numPreviousFailures: number;
@@ -84,6 +89,7 @@ export type Mounts = {
           | "failed"
           | "maybe_delivered"
           | "unable_to_deliver";
+        subtitle?: string;
         title: string;
       }>
     >;
@@ -129,8 +135,10 @@ export type Mounts = {
         logLevel: "DEBUG" | "INFO" | "WARN" | "ERROR";
         notification: {
           body?: string;
+          categoryIdentifier?: string;
           data?: any;
           sound?: string;
+          subtitle?: string;
           title: string;
         };
         userId: string;
