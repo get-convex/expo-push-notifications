@@ -154,7 +154,7 @@ export const coordinateSendingPushNotifications = internalMutation({
               expiration: n.metadata.expiration ?? undefined,
               priority: n.metadata.priority ?? undefined,
               subtitle: n.metadata.subtitle ?? undefined,
-              sound: n.metadata.sound ?? "default",
+              sound: n.metadata.sound ?? undefined,
               badge: n.metadata.badge ?? undefined,
               interruptionLevel: n.metadata.interruptionLevel ?? undefined,
               channelId: n.metadata.channelId ?? undefined,
