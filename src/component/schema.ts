@@ -1,8 +1,7 @@
 import { defineSchema, defineTable } from "convex/server";
-import { ObjectType, v } from "convex/values";
+import { v } from "convex/values";
 
 // https://docs.expo.dev/push-notifications/sending-notifications/#message-request-format
-
 export const notificationFields = {
   _contentAvailable: v.optional(v.boolean()),
   data: v.optional(v.any()),
