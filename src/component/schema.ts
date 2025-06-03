@@ -7,17 +7,21 @@ export const notificationFields = {
   _contentAvailable: v.optional(v.boolean()),
   data: v.optional(v.any()),
   title: v.string(),
+  subtitle: v.optional(v.string()),
   body: v.optional(v.string()),
   ttl: v.optional(v.number()),
   expiration: v.optional(v.number()),
   priority: v.optional(v.union(v.literal("default"), v.literal("normal"), v.literal("high"))),
-  subtitle: v.optional(v.string()),
+  // subtitle: v.optional(v.string()),
   sound: v.optional(v.union(v.string(), v.null())),
   badge: v.optional(v.number()),
   interruptionLevel: v.optional(v.union(v.literal("active"), v.literal("critical"), v.literal("passive"), v.literal("time-sensitive"))),
   channelId: v.optional(v.string()),
   categoryId: v.optional(v.string()),
   mutableContent: v.optional(v.boolean()),
+  // sound: v.optional(v.string()),
+  // data: v.optional(v.any()),
+  categoryIdentifier: v.optional(v.string()),
 };
 
 /**

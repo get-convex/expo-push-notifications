@@ -7,7 +7,7 @@
     "email": "support@convex.dev",
     "url": "https://github.com/get-convex/expo-push-notifications/issues"
   },
-  "version": "0.1.4",
+  "version": "0.2.2",
   "license": "Apache-2.0",
   "keywords": [
     "convex",
@@ -21,6 +21,9 @@
     "build:esm": "tsc --project ./esm.json && echo '{\\n  \"type\": \"module\"\\n}' > dist/esm/package.json",
     "build:cjs": "tsc --project ./commonjs.json && echo '{\\n  \"type\": \"commonjs\"\\n}' > dist/commonjs/package.json",
     "dev": "cd example; npm run dev",
+    "alpha": "rm -rf dist && npm run build && npm run test && npm version prerelease --preid alpha && npm publish --tag alpha && git push --tags",
+    "release": "rm -rf dist && npm run build && npm run test && npm version patch && npm publish && git push --tags",
+    "test": "cd example && npm run lint",
     "typecheck": "tsc --noEmit",
     "prepare": "npm run build"
   },
@@ -51,7 +54,7 @@
     }
   },
   "peerDependencies": {
-    "convex": "~1.16.5 || >=1.17.0 <1.25.0"
+    "convex": ">=1.23.0 <1.35.0"
   },
   "dependencies": {
     "convex-helpers": "^0.1.58"
