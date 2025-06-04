@@ -3,6 +3,7 @@ import { internalAction, internalMutation } from "./functions.js";
 import { internal } from "./_generated/api.js";
 import { Id } from "./_generated/dataModel.js";
 import { ensureCoordinator } from "./helpers.js";
+import { notificationFields } from "./schema.js";
 
 export const markNotificationState = internalMutation({
   args: {
@@ -145,12 +146,20 @@ export const coordinateSendingPushNotifications = internalMutation({
           return {
             message: {
               to: n.token,
-              title: n.metadata.title,
-              subtitle: n.metadata.subtitle ?? undefined,
-              body: n.metadata.body ?? undefined,
-              sound: n.metadata.sound ?? "default",
+              _contentAvailable: n.metadata._contentAvailable ?? undefined,
               data: n.metadata.data ?? undefined,
-              categoryIdentifier: n.metadata.categoryIdentifier ?? undefined,
+              title: n.metadata.title,
+              body: n.metadata.body ?? undefined,
+              ttl: n.metadata.ttl ?? undefined,
+              expiration: n.metadata.expiration ?? undefined,
+              priority: n.metadata.priority ?? undefined,
+              subtitle: n.metadata.subtitle ?? undefined,
+              sound: n.metadata.sound ?? undefined,
+              badge: n.metadata.badge ?? undefined,
+              interruptionLevel: n.metadata.interruptionLevel ?? undefined,
+              channelId: n.metadata.channelId ?? undefined,
+              categoryId: n.metadata.categoryId ?? undefined,
+              mutableContent: n.metadata.mutableContent ?? undefined,
             },
             _id: n._id,
           };
@@ -195,12 +204,7 @@ export const action_sendPushNotifications = internalAction({
       v.object({
         message: v.object({
           to: v.string(),
-          title: v.string(),
-          subtitle: v.optional(v.string()),
-          body: v.optional(v.string()),
-          sound: v.string(),
-          data: v.optional(v.any()),
-          categoryIdentifier: v.optional(v.string()),
+          ...notificationFields
         }),
         _id: v.id("notifications"),
       })
