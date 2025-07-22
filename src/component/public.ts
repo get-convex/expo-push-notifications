@@ -189,7 +189,7 @@ export const deleteNotificationsForUser = mutation({
 
 // e.g. pause sending notifications while the user is active in the app
 export const pauseNotificationsForUser = mutation({
-  args: { userId: v.id("users") },
+  args: { userId: v.string() },
   returns: v.null(),
   handler: async (ctx, { userId }) => {
     const existingToken = await ctx.db
@@ -208,7 +208,7 @@ export const pauseNotificationsForUser = mutation({
 });
 
 export const unpauseNotificationsForUser = mutation({
-  args: { userId: v.id("users") },
+  args: { userId: v.string() },
   returns: v.null(),
   handler: async (ctx, { userId }) => {
     const existingToken = await ctx.db
