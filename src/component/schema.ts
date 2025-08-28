@@ -5,7 +5,7 @@ import { v } from "convex/values";
 export const notificationFields = {
   _contentAvailable: v.optional(v.boolean()),
   data: v.optional(v.any()),
-  title: v.string(),
+  title: v.optional(v.string()),
   body: v.optional(v.string()),
   ttl: v.optional(v.number()),
   expiration: v.optional(v.number()),
