@@ -16,3 +16,4 @@ package-lock.json
 frontend/package.json
 # npm pack output
 *.tgz
+.claude
