@@ -11,7 +11,7 @@
 import type * as functions from "../functions.js";
 import type * as helpers from "../helpers.js";
 import type * as internal_ from "../internal.js";
-import type * as public from "../public.js";
+import type * as public_ from "../public.js";
 
 import type {
   ApiFromModules,
@@ -31,7 +31,7 @@ declare const fullApi: ApiFromModules<{
   functions: typeof functions;
   helpers: typeof helpers;
   internal: typeof internal_;
-  public: typeof public;
+  public: typeof public_;
 }>;
 export type Mounts = {
   public: {
@@ -46,12 +46,23 @@ export type Mounts = {
       "public",
       { id: string; logLevel: "DEBUG" | "INFO" | "WARN" | "ERROR" },
       null | {
+        _contentAvailable?: boolean;
         _creationTime: number;
+        badge?: number;
         body?: string;
-        categoryIdentifier?: string;
+        categoryId?: string;
+        channelId?: string;
         data?: any;
+        expiration?: number;
+        interruptionLevel?:
+          | "active"
+          | "critical"
+          | "passive"
+          | "time-sensitive";
+        mutableContent?: boolean;
         numPreviousFailures: number;
-        sound?: string;
+        priority?: "default" | "normal" | "high";
+        sound?: string | null;
         state:
           | "awaiting_delivery"
           | "in_progress"
@@ -61,7 +72,8 @@ export type Mounts = {
           | "maybe_delivered"
           | "unable_to_deliver";
         subtitle?: string;
-        title: string;
+        title?: string;
+        ttl?: number;
       }
     >;
     getNotificationsForUser: FunctionReference<
@@ -73,13 +85,24 @@ export type Mounts = {
         userId: string;
       },
       Array<{
+        _contentAvailable?: boolean;
         _creationTime: number;
+        badge?: number;
         body?: string;
-        categoryIdentifier?: string;
+        categoryId?: string;
+        channelId?: string;
         data?: any;
+        expiration?: number;
         id: string;
+        interruptionLevel?:
+          | "active"
+          | "critical"
+          | "passive"
+          | "time-sensitive";
+        mutableContent?: boolean;
         numPreviousFailures: number;
-        sound?: string;
+        priority?: "default" | "normal" | "high";
+        sound?: string | null;
         state:
           | "awaiting_delivery"
           | "in_progress"
@@ -89,7 +112,8 @@ export type Mounts = {
           | "maybe_delivered"
           | "unable_to_deliver";
         subtitle?: string;
-        title: string;
+        title?: string;
+        ttl?: number;
       }>
     >;
     getStatusForUser: FunctionReference<
@@ -133,16 +157,60 @@ export type Mounts = {
         allowUnregisteredTokens?: boolean;
         logLevel: "DEBUG" | "INFO" | "WARN" | "ERROR";
         notification: {
+          _contentAvailable?: boolean;
+          badge?: number;
           body?: string;
-          categoryIdentifier?: string;
+          categoryId?: string;
+          channelId?: string;
           data?: any;
-          sound?: string;
+          expiration?: number;
+          interruptionLevel?:
+            | "active"
+            | "critical"
+            | "passive"
+            | "time-sensitive";
+          mutableContent?: boolean;
+          priority?: "default" | "normal" | "high";
+          sound?: string | null;
           subtitle?: string;
-          title: string;
+          title?: string;
+          ttl?: number;
         };
         userId: string;
       },
       string | null
+    >;
+    sendPushNotificationBatch: FunctionReference<
+      "mutation",
+      "public",
+      {
+        allowUnregisteredTokens?: boolean;
+        logLevel: "DEBUG" | "INFO" | "WARN" | "ERROR";
+        notifications: Array<{
+          notification: {
+            _contentAvailable?: boolean;
+            badge?: number;
+            body?: string;
+            categoryId?: string;
+            channelId?: string;
+            data?: any;
+            expiration?: number;
+            interruptionLevel?:
+              | "active"
+              | "critical"
+              | "passive"
+              | "time-sensitive";
+            mutableContent?: boolean;
+            priority?: "default" | "normal" | "high";
+            sound?: string | null;
+            subtitle?: string;
+            title?: string;
+            ttl?: number;
+          };
+          userId: string;
+        }>;
+      },
+      Array<string | null>
     >;
     shutdown: FunctionReference<
       "mutation",

@@ -52,12 +52,23 @@ export declare const components: {
         "internal",
         { id: string; logLevel: "DEBUG" | "INFO" | "WARN" | "ERROR" },
         null | {
+          _contentAvailable?: boolean;
           _creationTime: number;
+          badge?: number;
           body?: string;
-          categoryIdentifier?: string;
+          categoryId?: string;
+          channelId?: string;
           data?: any;
+          expiration?: number;
+          interruptionLevel?:
+            | "active"
+            | "critical"
+            | "passive"
+            | "time-sensitive";
+          mutableContent?: boolean;
           numPreviousFailures: number;
-          sound?: string;
+          priority?: "default" | "normal" | "high";
+          sound?: string | null;
           state:
             | "awaiting_delivery"
             | "in_progress"
@@ -67,7 +78,8 @@ export declare const components: {
             | "maybe_delivered"
             | "unable_to_deliver";
           subtitle?: string;
-          title: string;
+          title?: string;
+          ttl?: number;
         }
       >;
       getNotificationsForUser: FunctionReference<
@@ -79,13 +91,24 @@ export declare const components: {
           userId: string;
         },
         Array<{
+          _contentAvailable?: boolean;
           _creationTime: number;
+          badge?: number;
           body?: string;
-          categoryIdentifier?: string;
+          categoryId?: string;
+          channelId?: string;
           data?: any;
+          expiration?: number;
           id: string;
+          interruptionLevel?:
+            | "active"
+            | "critical"
+            | "passive"
+            | "time-sensitive";
+          mutableContent?: boolean;
           numPreviousFailures: number;
-          sound?: string;
+          priority?: "default" | "normal" | "high";
+          sound?: string | null;
           state:
             | "awaiting_delivery"
             | "in_progress"
@@ -95,7 +118,8 @@ export declare const components: {
             | "maybe_delivered"
             | "unable_to_deliver";
           subtitle?: string;
-          title: string;
+          title?: string;
+          ttl?: number;
         }>
       >;
       getStatusForUser: FunctionReference<
@@ -139,16 +163,60 @@ export declare const components: {
           allowUnregisteredTokens?: boolean;
           logLevel: "DEBUG" | "INFO" | "WARN" | "ERROR";
           notification: {
+            _contentAvailable?: boolean;
+            badge?: number;
             body?: string;
-            categoryIdentifier?: string;
+            categoryId?: string;
+            channelId?: string;
             data?: any;
-            sound?: string;
+            expiration?: number;
+            interruptionLevel?:
+              | "active"
+              | "critical"
+              | "passive"
+              | "time-sensitive";
+            mutableContent?: boolean;
+            priority?: "default" | "normal" | "high";
+            sound?: string | null;
             subtitle?: string;
-            title: string;
+            title?: string;
+            ttl?: number;
           };
           userId: string;
         },
         string | null
+      >;
+      sendPushNotificationBatch: FunctionReference<
+        "mutation",
+        "internal",
+        {
+          allowUnregisteredTokens?: boolean;
+          logLevel: "DEBUG" | "INFO" | "WARN" | "ERROR";
+          notifications: Array<{
+            notification: {
+              _contentAvailable?: boolean;
+              badge?: number;
+              body?: string;
+              categoryId?: string;
+              channelId?: string;
+              data?: any;
+              expiration?: number;
+              interruptionLevel?:
+                | "active"
+                | "critical"
+                | "passive"
+                | "time-sensitive";
+              mutableContent?: boolean;
+              priority?: "default" | "normal" | "high";
+              sound?: string | null;
+              subtitle?: string;
+              title?: string;
+              ttl?: number;
+            };
+            userId: string;
+          }>;
+        },
+        Array<string | null>
       >;
       shutdown: FunctionReference<
         "mutation",

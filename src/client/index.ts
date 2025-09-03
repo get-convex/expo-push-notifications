@@ -103,6 +103,29 @@ export class PushNotifications<UserType extends string = GenericId<"users">> {
   }
 
   /**
+   * Sends push notifications to multiple users in batch.
+   *
+   * @param ctx The mutation context
+   * @param args Object containing list of {userId, notification} pairs and allowUnregisteredTokens flag
+   * @returns Promise resolving when all notifications are processed
+   */
+  sendPushNotificationBatch(
+    ctx: RunMutationCtx,
+    args: {
+      notifications: Array<{
+        userId: UserType;
+        notification: NotificationFields;
+      }>;
+      allowUnregisteredTokens?: boolean;
+    }
+  ) {
+    return ctx.runMutation(this.component.public.sendPushNotificationBatch, {
+      ...args,
+      logLevel: this.config.logLevel,
+    });
+  }
+
+  /**
    * Gets the notification by ID returned from {@link sendPushNotification}.
    * Returns null if there is no record of a notification with that ID.
    */

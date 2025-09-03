@@ -1,5 +1,5 @@
-import { ConvexError, v } from "convex/values";
-import { mutation, query } from "./functions.js";
+import { ConvexError, Infer, v } from "convex/values";
+import { mutation, MutationCtx, query } from "./functions.js";
 import { notificationFields, notificationState } from "./schema.js";
 import { ensureCoordinator, shutdownGracefully } from "./helpers.js";
 import { api } from "./_generated/api.js";
@@ -50,49 +50,85 @@ export const removePushNotificationToken = mutation({
   },
 });
 
+const sendPushNotificationArgs = v.object({
+  userId: v.string(),
+  notification: v.object(notificationFields),
+  allowUnregisteredTokens: v.optional(v.boolean()),
+});
+
 export const sendPushNotification = mutation({
-  args: {
-    userId: v.string(),
-    notification: v.object(notificationFields),
-    allowUnregisteredTokens: v.optional(v.boolean()),
-  },
+  args: sendPushNotificationArgs,
   returns: v.union(v.id("notifications"), v.null()),
   handler: async (ctx, args) => {
-    const token = await ctx.db
-      .query("pushTokens")
-      .withIndex("userId", (q) => q.eq("userId", args.userId))
-      .unique();
-    if (token === null) {
-      ctx.logger.error(
-        `No push token found for user ${args.userId}, cannot send notification`
-      );
-      if (args.allowUnregisteredTokens) {
-        return null;
-      }
-      throw new ConvexError({
-        code: "NoPushToken",
-        message: "No push token found for user",
-        userId: args.userId,
-        notification: args.notification,
-      });
-    }
-    if (token.notificationsPaused) {
-      ctx.logger.info(
-        `Notifications are paused for user ${args.userId}, skipping`
-      );
-      return null;
-    }
-    const id = await ctx.db.insert("notifications", {
-      token: token.token,
-      metadata: args.notification,
-      state: "awaiting_delivery",
-      numPreviousFailures: 0,
-    });
-    ctx.logger.debug(`Recording notification for user ${args.userId}`);
+    const result = await sendPushNotificationHandler(ctx, args);
     await ensureCoordinator(ctx);
-    return id;
+    return result;
   },
 });
+
+export const sendPushNotificationBatch = mutation({
+  args: {
+    notifications: v.array(
+      v.object({
+        userId: v.string(),
+        notification: v.object(notificationFields),
+      })
+    ),
+    allowUnregisteredTokens: v.optional(v.boolean()),
+  },
+  returns: v.array(v.union(v.id("notifications"), v.null())),
+  handler: async (ctx, args) => {
+    const results = [];
+    for (const { userId, notification } of args.notifications) {
+      const result = await sendPushNotificationHandler(ctx, {
+        userId,
+        notification,
+        allowUnregisteredTokens: args.allowUnregisteredTokens,
+      });
+      results.push(result);
+    }
+    await ensureCoordinator(ctx);
+    return results;
+  },
+});
+
+async function sendPushNotificationHandler(
+  ctx: MutationCtx,
+  args: Infer<typeof sendPushNotificationArgs>
+) {
+  const token = await ctx.db
+    .query("pushTokens")
+    .withIndex("userId", (q) => q.eq("userId", args.userId))
+    .unique();
+  if (token === null) {
+    ctx.logger.error(
+      `No push token found for user ${args.userId}, cannot send notification`
+    );
+    if (args.allowUnregisteredTokens) {
+      return null;
+    }
+    throw new ConvexError({
+      code: "NoPushToken",
+      message: "No push token found for user",
+      userId: args.userId,
+      notification: args.notification,
+    });
+  }
+  if (token.notificationsPaused) {
+    ctx.logger.info(
+      `Notifications are paused for user ${args.userId}, skipping`
+    );
+    return null;
+  }
+  const id = await ctx.db.insert("notifications", {
+    token: token.token,
+    metadata: args.notification,
+    state: "awaiting_delivery",
+    numPreviousFailures: 0,
+  });
+  ctx.logger.debug(`Recording notification for user ${args.userId}`);
+  return id;
+}
 
 export const getNotification = query({
   args: { id: v.id("notifications") },
@@ -110,7 +146,8 @@ export const getNotification = query({
     if (!notification) {
       return null;
     }
-    const { metadata, numPreviousFailures, state, _creationTime } = notification;
+    const { metadata, numPreviousFailures, state, _creationTime } =
+      notification;
     return { ...metadata, numPreviousFailures, state, _creationTime };
   },
 });
