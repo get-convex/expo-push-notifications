@@ -87,7 +87,6 @@ export const shutdownGracefully = async (ctx: MutationCtx) => {
       default: {
         const _typeCheck: never = job.state;
         ctx.logger.error(
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any
           `Unknown job state ${(job.state as any).kind} for sender ${sender._id}. Cleaning it up. `,
         );
         await ctx.db.delete(sender._id);

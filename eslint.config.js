@@ -8,10 +8,12 @@ export default [
   {
     ignores: [
       "dist/**",
-      "eslint.config.js",
-      "vitest.config.ts",
+      "*.config.{js,mjs,ts}",
       "**/_generated/",
       "node10stubs.mjs",
+      "example/.expo/**",
+      "example/**/*.config.{js,mjs,ts}",
+      "example/expo-env.d.ts",
     ],
   },
   {
@@ -48,6 +50,7 @@ export default [
           varsIgnorePattern: "^_",
         },
       ],
+      "no-unused-expressions": "off",
       "@typescript-eslint/no-unused-expressions": [
         "error",
         {
@@ -60,7 +63,7 @@ export default [
   },
   // React app code - Browser environment
   {
-    files: ["src/react/**/*.{ts,tsx}", "example/src/**/*.{ts,tsx}"],
+    files: ["src/react/**/*.{ts,tsx}", "example/app/**/*.{ts,tsx}"],
     languageOptions: {
       ecmaVersion: 2020,
       globals: globals.browser,
@@ -84,16 +87,15 @@ export default [
           varsIgnorePattern: "^_",
         },
       ],
-    },
-  },
-  // Example config files (vite.config.ts, etc.) - Node environment
-  {
-    files: ["example/vite.config.ts", "example/**/*.config.{js,ts}"],
-    languageOptions: {
-      globals: {
-        ...globals.node,
-        ...globals.browser,
-      },
+      "no-unused-expressions": "off",
+      "@typescript-eslint/no-unused-expressions": [
+        "warn",
+        {
+          allowShortCircuit: true,
+          allowTernary: true,
+          allowTaggedTemplates: true,
+        },
+      ],
     },
   },
 ];
