@@ -1,4 +1,4 @@
-import { Infer, v } from "convex/values";
+import { v, type Infer } from "convex/values";
 
 export const logLevelValidator = v.union(
   v.literal("DEBUG"),

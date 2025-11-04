@@ -1,13 +1,13 @@
-import {
+import type {
   Expand,
   FunctionReference,
   GenericDataModel,
   GenericMutationCtx,
   GenericQueryCtx,
 } from "convex/server";
-import { GenericId } from "convex/values";
-import { NotificationFields } from "../component/schema.js";
-import { LogLevel } from "../logging/index.js";
+import type { GenericId } from "convex/values";
+import type { NotificationFields } from "../component/schema.js";
+import type { LogLevel } from "../logging/index.js";
 import type { ComponentApi } from "../component/_generated/component.js";
 
 /**

@@ -1,6 +1,6 @@
-import { MutationCtx } from "./functions.js";
+import type { MutationCtx } from "./functions.js";
 import { internal } from "./_generated/api.js";
-import { Doc } from "./_generated/dataModel.js";
+import type { Doc } from "./_generated/dataModel.js";
 
 export async function ensureCoordinator(ctx: MutationCtx) {
   ctx.logger.debug("Ensuring there's a notification coordinator");

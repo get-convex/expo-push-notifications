@@ -1,7 +1,7 @@
-import { JSONValue, v } from "convex/values";
+import { v, type JSONValue } from "convex/values";
 import { internalAction, internalMutation } from "./functions.js";
 import { internal } from "./_generated/api.js";
-import { Id } from "./_generated/dataModel.js";
+import type { Id } from "./_generated/dataModel.js";
 import { ensureCoordinator } from "./helpers.js";
 import { notificationFields } from "./schema.js";
 

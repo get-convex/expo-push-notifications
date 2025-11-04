@@ -1,5 +1,5 @@
-import { ConvexError, Infer, v } from "convex/values";
-import { mutation, MutationCtx, query } from "./functions.js";
+import { ConvexError, v, type Infer } from "convex/values";
+import { mutation, query, type MutationCtx } from "./functions.js";
 import { notificationFields, notificationState } from "./schema.js";
 import { ensureCoordinator, shutdownGracefully } from "./helpers.js";
 import { api } from "./_generated/api.js";
