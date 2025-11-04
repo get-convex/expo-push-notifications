@@ -190,6 +190,7 @@ export const getNotificationsForUser = query({
 
 export const deleteNotificationsForUser = mutation({
   args: { userId: v.string() },
+  returns: v.null(),
   handler: async (ctx, args) => {
     const token = await ctx.db
       .query("pushTokens")

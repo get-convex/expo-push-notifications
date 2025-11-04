@@ -3,12 +3,8 @@
   "compilerOptions": {
     "strict": true,
     "paths": {
-      "@/*": [
-        "./*"
-      ],
-      "baseUrl": [
-        "."
-      ]
+      "@/*": ["./*"],
+      "baseUrl": ["."]
     }
   },
   "include": [
