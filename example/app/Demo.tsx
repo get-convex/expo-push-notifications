@@ -43,7 +43,7 @@ async function registerForPushNotificationsAsync() {
     }
     if (finalStatus !== "granted") {
       handleRegistrationError(
-        "Permission not granted to get push token for push notification!"
+        "Permission not granted to get push token for push notification!",
       );
       return;
     }
@@ -79,7 +79,7 @@ export function Demo() {
   const [notifId, setNotifId] = useState<string | null>(null);
   const notificationState = useQuery(
     api.example.getNotificationStatus,
-    notifId ? { id: notifId } : "skip"
+    notifId ? { id: notifId } : "skip",
   );
   const allUsers = useQuery(api.example.getUsers) ?? [];
 
@@ -116,7 +116,7 @@ export function Demo() {
               (error: unknown) => {
                 alert(`Error registering for push notifications: ${error}`);
                 return undefined;
-              }
+              },
             );
             if (token !== undefined) {
               await convex
