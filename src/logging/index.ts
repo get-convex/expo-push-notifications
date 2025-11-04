@@ -4,7 +4,7 @@ export const logLevelValidator = v.union(
   v.literal("DEBUG"),
   v.literal("INFO"),
   v.literal("WARN"),
-  v.literal("ERROR")
+  v.literal("ERROR"),
 );
 
 export type LogLevel = Infer<typeof logLevelValidator>;
