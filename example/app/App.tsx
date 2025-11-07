@@ -2,7 +2,7 @@ import React from "react";
 import { ConvexProvider, ConvexReactClient } from "convex/react";
 import { Demo } from "./Demo";
 import { registerRootComponent } from "expo";
-import defaultConfig from "@tamagui/config/v3";
+import { config as defaultConfig } from "@tamagui/config/v3";
 import { createTamagui, TamaguiProvider } from "tamagui";
 
 const config = createTamagui(defaultConfig);
