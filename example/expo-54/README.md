@@ -3,6 +3,14 @@
 This is an [Expo](https://expo.dev) project created with
 [`create-expo-app`](https://www.npmjs.com/package/create-expo-app).
 
+## Steps to recreate this app
+
+```sh
+npx create-expo-app@latest # name it expo-54
+cd expo-54
+npm i convex
+```
+
 ## How it differs from the standard Expo template
 
 - It uses [Tamagui](https://tamagui.dev/) for styling instead of the default
