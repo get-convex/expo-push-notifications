@@ -9,7 +9,8 @@ dist-ssr
 explorations
 node_modules
 .eslintcache
-*/expo-env.d.ts
+**/.expo
+**/expo-env.d.ts
 # npm pack output
 *.tgz
 *.tsbuildinfo

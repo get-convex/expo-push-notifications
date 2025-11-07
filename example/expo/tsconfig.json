@@ -13,6 +13,7 @@
     "**/*.tsx",
     "metro.config.mjs",
     ".expo/types/**/*.ts",
-    "expo-env.d.ts"
-  ]
+    "../expo-env.d.ts.ts"
+  ],
+  "exclude": ["**/*.test.ts", "convex/convex.config.ts"]
 }
