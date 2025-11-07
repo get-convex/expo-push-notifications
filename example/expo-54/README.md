@@ -9,6 +9,7 @@ This is an [Expo](https://expo.dev) project created with
 npx create-expo-app@latest # name it expo-54
 cd expo-54
 npm i convex
+npx expo install expo-notifications expo-device expo-constants
 ```
 
 ## How it differs from the standard Expo template
