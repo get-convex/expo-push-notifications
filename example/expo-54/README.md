@@ -12,10 +12,7 @@ npm i convex
 npx expo install expo-notifications expo-device expo-constants
 ```
 
-## How it differs from the standard Expo template
-
-- It uses [Tamagui](https://tamagui.dev/) for styling instead of the default
-  React Native components.
+Get App.tsx from the notification example, and modify it to use Demo.tsx.
 
 ## Get started
 
