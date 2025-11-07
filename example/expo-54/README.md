@@ -3,7 +3,7 @@
 This is an [Expo](https://expo.dev) project created with
 [`create-expo-app`](https://www.npmjs.com/package/create-expo-app).
 
-## Steps to recreate this app
+## How this was modified from the standard Expo template
 
 ```sh
 npx create-expo-app@latest # name it expo-54
@@ -12,7 +12,9 @@ npm i convex
 npx expo install expo-notifications expo-device expo-constants
 ```
 
-Get App.tsx from the notification example, and modify it to use Demo.tsx.
+- Create App.tsx based on the push notifications setup instructions.
+- Adapt Demo.tsx to use the Expo features.
+- Add Convex to the layout and show the App there.
 
 ## Get started
 
