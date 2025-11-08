@@ -8,7 +8,7 @@ const FRUIT_EMOJIS = ["🍎", "🍊", "🍇", "🥝", "🍉"];
 export function Demo({ expoPushToken }: { expoPushToken: string }) {
   const convex = useConvex();
   const [notifId, setNotifId] = useState<string | null>(null);
-  const [name, setName] = useState("");
+  const [name, setName] = useState("User " + Math.floor(Math.random() * 1000));
   const notificationState = useQuery(
     api.example.getNotificationStatus,
     notifId ? { id: notifId } : "skip",
@@ -28,7 +28,7 @@ export function Demo({ expoPushToken }: { expoPushToken: string }) {
       />
       <Button
         title="Set up push notifications"
-        disabled={expoPushToken === ""}
+        disabled={!expoPushToken}
         onPress={async () => {
           Keyboard.dismiss();
           if (!expoPushToken) {

@@ -87,14 +87,23 @@ async function registerForPushNotificationsAsync() {
 
 export default function App() {
   const [expoPushToken, setExpoPushToken] = useState("");
+  const [error, setError] = useState<string | undefined>(undefined);
   const [notification, setNotification] = useState<
     Notifications.Notification | undefined
   >(undefined);
 
   useEffect(() => {
+    // check if it's on the web
+    if (Platform.OS === "web") {
+      setError("Push notifications are not supported on web");
+      return;
+    }
     registerForPushNotificationsAsync()
-      .then((token) => setExpoPushToken(token ?? ""))
-      .catch((error: any) => setExpoPushToken(`${error}`));
+      .then((token) => {
+        setExpoPushToken(token ?? "");
+        setError(undefined);
+      })
+      .catch((error: any) => setError(`${error}`));
 
     const notificationListener = Notifications.addNotificationReceivedListener(
       (notification) => {
@@ -115,9 +124,13 @@ export default function App() {
 
   return (
     <View
-      style={{ flex: 1, alignItems: "center", justifyContent: "space-around" }}
+      style={{ flex: 1, alignItems: "center", justifyContent: "flex-start" }}
     >
-      <Text>Your Expo push token: {expoPushToken}</Text>
+      {error ? (
+        <Text>Error: {error}</Text>
+      ) : (
+        <Text>Your Expo push token: {expoPushToken}</Text>
+      )}
       <View style={{ alignItems: "center", justifyContent: "center" }}>
         <Text>
           Title: {notification && notification.request.content.title}{" "}
