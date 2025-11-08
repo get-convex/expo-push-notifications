@@ -6,14 +6,14 @@ This is an [Expo](https://expo.dev) project created with
 ## How this was modified from the standard Expo template
 
 ```sh
-npx create-expo-app@latest # name it expo-54
-cd expo-54
+npx create-expo-app@latest # name it example
+cd example
 npm i convex
 npx expo install expo-notifications expo-device expo-constants
 ```
 
 - Create App.tsx based on the push notifications setup instructions.
-- Adapt Demo.tsx to use the Expo features.
+- Copy in the Demo.tsx and convex/ folder from the old project.
 - Add Convex to the layout and show the App there.
 - Add `"extra": { "eas": { "projectId": "your-project-id" } }` to app.json.
 
