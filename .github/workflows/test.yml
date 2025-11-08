@@ -21,7 +21,9 @@ jobs:
       - name: Node setup
         uses: actions/setup-node@a0853c24544627f65ddf259abe73b1d18a591444 # v5
         with:
-          cache-dependency-path: package.json
+          cache-dependency-path: |
+            package.json
+            example/package.json
           node-version: "20.x"
           cache: "npm"
 
@@ -29,6 +31,7 @@ jobs:
         run: |
           npm i
           npm run build
+          cd example && npm install
       - name: Publish package for testing branch
         run: npx pkg-pr-new publish || echo "Have you set up pkg-pr-new for this repo?"
       - name: Test
