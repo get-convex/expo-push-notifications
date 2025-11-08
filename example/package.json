@@ -7,7 +7,7 @@
     "reset-project": "node ./scripts/reset-project.js",
     "android": "expo start --android",
     "ios": "expo start --ios",
-    "web": "printf 'web support is not available for push notifications'\n",
+    "web": "expo start --web",
     "lint": "expo lint"
   },
   "dependencies": {

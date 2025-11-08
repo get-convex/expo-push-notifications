@@ -19,9 +19,9 @@
   "scripts": {
     "dev": "run-p -r 'dev:*'",
     "dev:backend": "convex dev --typecheck-components",
-    "dev:expo": "cd example && npm run ios",
+    "dev:expo": "cd example && npx expo start",
     "dev:build": "chokidar 'tsconfig*.json' 'src/**/*.ts' -i '**/*.test.ts' -c 'convex codegen --component-dir ./src/component && npm run build' --initial",
-    "setup": "npm install && npm run dev:backend -- --until-success && printf 'EXPO_PUBLIC_CONVEX_URL=' >> example/.env.local && npx convex env get CONVEX_CLOUD_URL >> example/.env.local && cd example && npm install",
+    "setup": "npm install && cd example && npm install && cd .. && npm run dev:backend -- --until-success && printf 'EXPO_PUBLIC_CONVEX_URL=' >> example/.env.local && npx convex env get CONVEX_CLOUD_URL >> example/.env.local",
     "clean": "rm -rf dist *.tsbuildinfo",
     "build": "tsc --project ./tsconfig.build.json",
     "typecheck": "tsc --noEmit && tsc -p example && tsc -p example/convex",
