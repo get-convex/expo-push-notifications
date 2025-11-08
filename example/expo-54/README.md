@@ -15,6 +15,7 @@ npx expo install expo-notifications expo-device expo-constants
 - Create App.tsx based on the push notifications setup instructions.
 - Adapt Demo.tsx to use the Expo features.
 - Add Convex to the layout and show the App there.
+- Add `"extra": { "eas": { "projectId": "your-project-id" } }` to app.json.
 
 ## Get started
 
