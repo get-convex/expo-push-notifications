@@ -31,20 +31,22 @@ export function Demo({ expoPushToken }: { expoPushToken: string }) {
         disabled={expoPushToken === ""}
         onPress={async () => {
           Keyboard.dismiss();
-          if (expoPushToken !== undefined) {
-            await convex
-              .mutation(api.example.recordPushNotificationToken, {
-                name,
-                token: expoPushToken,
-              })
-              .then(() => {
-                alert("Successfully set up push notifications!");
-              })
-              .catch((error: unknown) => {
-                alert(`Error registering for push notifications: ${error}`);
-                return undefined;
-              });
+          if (!expoPushToken) {
+            alert("No push token found");
+            return;
           }
+          await convex
+            .mutation(api.example.recordPushNotificationToken, {
+              name,
+              token: expoPushToken,
+            })
+            .then(() => {
+              alert("Successfully set up push notifications!");
+            })
+            .catch((error: unknown) => {
+              alert(`Error registering for push notifications: ${error}`);
+              return undefined;
+            });
         }}
       />
       <Text>Send a fruit notification!</Text>
