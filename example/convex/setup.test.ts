@@ -9,7 +9,10 @@ const modules = import.meta.glob("./**/*.*s");
 // explicitly register it with its schema and modules.
 export function initConvexTest() {
   const t = convexTest(schema, modules);
-  component.register(t);
+  // The component depends on a different version of convex-test (the one in
+  // the root node_modules) so we need to cast for now.
+  // We likely want this to be a monorepo instead of the current setup.
+  component.register(t as any);
   return t;
 }
 

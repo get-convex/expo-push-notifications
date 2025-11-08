@@ -15,15 +15,14 @@ export default [
     ],
   },
   {
-    files: ["src/**/*.{js,mjs,cjs,ts,tsx}", "example/**/*.{js,mjs,cjs,ts,tsx}"],
+    files: [
+      "src/**/*.{js,mjs,cjs,ts,tsx}",
+      "example/convex/*.{js,mjs,cjs,ts,tsx}",
+    ],
     languageOptions: {
       parser: tseslint.parser,
       parserOptions: {
-        project: [
-          "./tsconfig.json",
-          "./example/tsconfig.json",
-          "./example/convex/tsconfig.json",
-        ],
+        project: ["./tsconfig.json", "./example/convex/tsconfig.json"],
         tsconfigRootDir: import.meta.dirname,
       },
     },
