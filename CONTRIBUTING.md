@@ -9,12 +9,11 @@ npm run dev
 
 Setup should:
 
-1. Install dependencies
+1. Install dependencies in the root and example directories
 1. Build the component
-1. Create a Convex project
-1. Set the EXPO_PUBLIC_CONVEX_URL environment variable for the example expo app
-   (needs to be set in the example expo app's .env.local file)
-1. Install the dependencies for the example expo app
+1. Create a Convex project if not already connected, and deploy to it once.
+1. Set the `EXPO_PUBLIC_CONVEX_URL` environment variable for the example expo
+   app (needs to be set in the example expo app's `.env.local` file)
 
 ## Testing
 
