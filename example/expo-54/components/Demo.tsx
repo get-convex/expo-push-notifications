@@ -1,7 +1,7 @@
+import { api } from "@/convex/_generated/api.js";
 import { useConvex, useQuery } from "convex/react";
 import { useState } from "react";
 import { Button, Keyboard, Text, TextInput, View } from "react-native";
-import { api } from "../../convex/_generated/api.js";
 
 const FRUIT_EMOJIS = ["🍎", "🍊", "🍇", "🥝", "🍉"];
 
