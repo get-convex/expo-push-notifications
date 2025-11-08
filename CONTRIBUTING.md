@@ -3,9 +3,18 @@
 ## Running locally
 
 ```sh
-npm i
+npm run setup
 npm run dev
 ```
+
+Setup should:
+
+1. Install dependencies
+1. Build the component
+1. Create a Convex project
+1. Set the EXPO_PUBLIC_CONVEX_URL environment variable for the example expo app
+   (needs to be set in the example expo app's .env.local file)
+1. Install the dependencies for the example expo app
 
 ## Testing
 
