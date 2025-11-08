@@ -1,7 +1,9 @@
 import { api } from "@/convex/_generated/api.js";
 import { useConvex, useQuery } from "convex/react";
 import { useState } from "react";
-import { Button, Keyboard, Text, TextInput, View } from "react-native";
+import { Button, Keyboard, TextInput } from "react-native";
+import { ThemedText } from "./themed-text";
+import { ThemedView } from "./themed-view";
 
 const FRUIT_EMOJIS = ["🍎", "🍊", "🍇", "🥝", "🍉"];
 
@@ -17,10 +19,10 @@ export function Demo({ expoPushToken }: { expoPushToken: string }) {
 
   return (
     <>
-      <Text>
+      <ThemedText>
         In a real app, you would probably sign in, but for a demo, choose a name
         to associate with your account.
-      </Text>
+      </ThemedText>
       <TextInput
         placeholder="Enter your name"
         value={name}
@@ -49,16 +51,16 @@ export function Demo({ expoPushToken }: { expoPushToken: string }) {
             });
         }}
       />
-      <Text>Send a fruit notification!</Text>
+      <ThemedText>Send a fruit notification!</ThemedText>
       {allUsers.map((u) => (
-        <View
+        <ThemedView
           key={u._id}
           style={{ flexDirection: "row", alignItems: "center", gap: 8 }}
         >
-          <Text>
+          <ThemedText>
             {u.name}
             {u.name === name ? " (You)" : ""}
-          </Text>
+          </ThemedText>
           {FRUIT_EMOJIS.map((emoji, idx) => (
             <Button
               key={idx}
@@ -73,10 +75,10 @@ export function Demo({ expoPushToken }: { expoPushToken: string }) {
               }}
             />
           ))}
-        </View>
+        </ThemedView>
       ))}
       {notificationState && (
-        <Text>Notification status: {notificationState}</Text>
+        <ThemedText>Notification status: {notificationState}</ThemedText>
       )}
     </>
   );
