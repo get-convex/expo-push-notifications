@@ -8,7 +8,7 @@ export default [
       "dist/**",
       "*.config.{js,mjs,ts}",
       "**/_generated/",
-      "node10stubs.mjs",
+
       "example/.expo/**",
       "example/{app,assets,components,constants,hooks,scripts}/**",
       "example/**/*.config.{js,mjs,ts}",
