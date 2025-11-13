@@ -1,14 +1,12 @@
-import {
-  Expand,
-  FunctionReference,
+import type {
   GenericDataModel,
   GenericMutationCtx,
   GenericQueryCtx,
 } from "convex/server";
-import { GenericId } from "convex/values";
-import { api } from "../component/_generated/api.js";
-import { NotificationFields } from "../component/schema.js";
-import { LogLevel } from "../logging/index.js";
+import type { GenericId } from "convex/values";
+import type { NotificationFields } from "../component/schema.js";
+import type { LogLevel } from "../logging/index.js";
+import type { ComponentApi } from "../component/_generated/component.js";
 
 /**
  * This component uses Expo's push notification API
@@ -25,10 +23,10 @@ export class PushNotifications<UserType extends string = GenericId<"users">> {
     logLevel: LogLevel;
   };
   constructor(
-    public component: UseApi<typeof api>,
+    public component: ComponentApi,
     config?: {
       logLevel?: LogLevel;
-    }
+    },
   ) {
     this.component = component;
     this.config = {
@@ -44,7 +42,7 @@ export class PushNotifications<UserType extends string = GenericId<"users">> {
    */
   recordToken(
     ctx: RunMutationCtx,
-    args: { userId: UserType; pushToken: string }
+    args: { userId: UserType; pushToken: string },
   ): Promise<null> {
     return ctx.runMutation(this.component.public.recordPushNotificationToken, {
       ...args,
@@ -94,7 +92,7 @@ export class PushNotifications<UserType extends string = GenericId<"users">> {
       userId: UserType;
       notification: NotificationFields;
       allowUnregisteredTokens?: boolean;
-    }
+    },
   ) {
     return ctx.runMutation(this.component.public.sendPushNotification, {
       ...args,
@@ -117,7 +115,7 @@ export class PushNotifications<UserType extends string = GenericId<"users">> {
         notification: NotificationFields;
       }>;
       allowUnregisteredTokens?: boolean;
-    }
+    },
   ) {
     return ctx.runMutation(this.component.public.sendPushNotificationBatch, {
       ...args,
@@ -141,7 +139,7 @@ export class PushNotifications<UserType extends string = GenericId<"users">> {
    */
   getNotificationsForUser(
     ctx: RunQueryCtx,
-    args: { userId: UserType; limit?: number }
+    args: { userId: UserType; limit?: number },
   ) {
     return ctx.runQuery(this.component.public.getNotificationsForUser, {
       ...args,
@@ -222,30 +220,3 @@ type RunQueryCtx = {
 type RunMutationCtx = {
   runMutation: GenericMutationCtx<GenericDataModel>["runMutation"];
 };
-
-export type OpaqueIds<T> =
-  T extends GenericId<infer _T>
-    ? string
-    : T extends (infer U)[]
-      ? OpaqueIds<U>[]
-      : T extends object
-        ? { [K in keyof T]: OpaqueIds<T[K]> }
-        : T;
-
-export type UseApi<API> = Expand<{
-  [mod in keyof API]: API[mod] extends FunctionReference<
-    infer FType,
-    "public",
-    infer FArgs,
-    infer FReturnType,
-    infer FComponentPath
-  >
-    ? FunctionReference<
-        FType,
-        "internal",
-        OpaqueIds<FArgs>,
-        OpaqueIds<FReturnType>,
-        FComponentPath
-      >
-    : UseApi<API[mod]>;
-}>;

@@ -1,5 +1,5 @@
-import { ConvexError, Infer, v } from "convex/values";
-import { mutation, MutationCtx, query } from "./functions.js";
+import { ConvexError, v, type Infer } from "convex/values";
+import { mutation, query, type MutationCtx } from "./functions.js";
 import { notificationFields, notificationState } from "./schema.js";
 import { ensureCoordinator, shutdownGracefully } from "./helpers.js";
 import { api } from "./_generated/api.js";
@@ -23,7 +23,7 @@ export const recordPushNotificationToken = mutation({
       .unique();
     if (existingToken !== null) {
       ctx.logger.debug(
-        `Push token already exists for user ${userId}, updating token`
+        `Push token already exists for user ${userId}, updating token`,
       );
       await ctx.db.patch(existingToken._id, { token: pushToken });
       return;
@@ -72,7 +72,7 @@ export const sendPushNotificationBatch = mutation({
       v.object({
         userId: v.string(),
         notification: v.object(notificationFields),
-      })
+      }),
     ),
     allowUnregisteredTokens: v.optional(v.boolean()),
   },
@@ -94,7 +94,7 @@ export const sendPushNotificationBatch = mutation({
 
 async function sendPushNotificationHandler(
   ctx: MutationCtx,
-  args: Infer<typeof sendPushNotificationArgs>
+  args: Infer<typeof sendPushNotificationArgs>,
 ) {
   const token = await ctx.db
     .query("pushTokens")
@@ -102,7 +102,7 @@ async function sendPushNotificationHandler(
     .unique();
   if (token === null) {
     ctx.logger.error(
-      `No push token found for user ${args.userId}, cannot send notification`
+      `No push token found for user ${args.userId}, cannot send notification`,
     );
     if (args.allowUnregisteredTokens) {
       return null;
@@ -116,7 +116,7 @@ async function sendPushNotificationHandler(
   }
   if (token.notificationsPaused) {
     ctx.logger.info(
-      `Notifications are paused for user ${args.userId}, skipping`
+      `Notifications are paused for user ${args.userId}, skipping`,
     );
     return null;
   }
@@ -139,7 +139,7 @@ export const getNotification = query({
       state: notificationState,
       numPreviousFailures: v.number(),
       _creationTime: v.number(),
-    })
+    }),
   ),
   handler: async (ctx, args) => {
     const notification = await ctx.db.get(args.id);
@@ -161,7 +161,7 @@ export const getNotificationsForUser = query({
       state: notificationState,
       numPreviousFailures: v.number(),
       _creationTime: v.number(),
-    })
+    }),
   ),
   handler: async (ctx, args) => {
     const token = await ctx.db
@@ -183,13 +183,14 @@ export const getNotificationsForUser = query({
         state: state,
         numPreviousFailures: numPreviousFailures,
         _creationTime,
-      })
+      }),
     );
   },
 });
 
 export const deleteNotificationsForUser = mutation({
   args: { userId: v.string() },
+  returns: v.null(),
   handler: async (ctx, args) => {
     const token = await ctx.db
       .query("pushTokens")
@@ -208,13 +209,13 @@ export const deleteNotificationsForUser = mutation({
     }
     if (notifications.length > 0) {
       ctx.logger.info(
-        `Deleted ${notifications.length} notifications for user ${args.userId}`
+        `Deleted ${notifications.length} notifications for user ${args.userId}`,
       );
     }
     if (notifications.length === DEFAULT_LIMIT) {
       ctx.logger.info(
         `Reached limit of ${DEFAULT_LIMIT} notifications for user ${args.userId},` +
-          ` scheduling another deletion`
+          ` scheduling another deletion`,
       );
       await ctx.scheduler.runAfter(0, api.public.deleteNotificationsForUser, {
         ...args,
@@ -273,7 +274,7 @@ export const getStatusForUser = query({
       .unique();
     if (existingToken === null) {
       ctx.logger.debug(
-        `No push token found for user ${userId}, returning false`
+        `No push token found for user ${userId}, returning false`,
       );
       return { hasToken: false, paused: false };
     }
@@ -322,7 +323,7 @@ export const restart = mutation({
     const { inProgressSenders } = await shutdownGracefully(ctx);
     if (inProgressSenders.length > 0) {
       ctx.logger.error(
-        `There are ${inProgressSenders.length} jobs currently sending notifications. Wait a few seconds for them to finish and try to restart again.`
+        `There are ${inProgressSenders.length} jobs currently sending notifications. Wait a few seconds for them to finish and try to restart again.`,
       );
       return false;
     }

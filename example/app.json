@@ -1,40 +1,54 @@
 {
   "expo": {
-    "name": "components",
-    "slug": "push-notifications",
+    "name": "example",
+    "slug": "example",
     "version": "1.0.0",
     "orientation": "portrait",
-    "scheme": "myapp",
+    "icon": "./assets/images/icon.png",
+    "scheme": "expo54",
     "userInterfaceStyle": "automatic",
-    "extra": {
-      "eas": {
-        "projectId": "5b3c07e0-6b9f-4a1f-a9b9-ac4aa70fc3d5"
-      },
-      "router": {
-        "origin": false
-      }
-    },
-    "splash": {
-      "resizeMode": "contain",
-      "backgroundColor": "#ffffff"
-    },
+    "newArchEnabled": true,
     "ios": {
       "supportsTablet": true
     },
     "android": {
       "adaptiveIcon": {
-        "backgroundColor": "#ffffff"
-      }
+        "backgroundColor": "#E6F4FE",
+        "foregroundImage": "./assets/images/android-icon-foreground.png",
+        "backgroundImage": "./assets/images/android-icon-background.png",
+        "monochromeImage": "./assets/images/android-icon-monochrome.png"
+      },
+      "edgeToEdgeEnabled": true,
+      "predictiveBackGestureEnabled": false
     },
     "web": {
-      "bundler": "metro",
-      "output": "static"
+      "output": "static",
+      "favicon": "./assets/images/favicon.png"
     },
-    "plugins": ["expo-router"],
+    "extra": {
+      "eas": {
+        "projectId": "5b3c07e0-6b9f-4a1f-a9b9-ac4aa70fc3d5"
+      }
+    },
+    "plugins": [
+      "expo-router",
+      "expo-notifications",
+      [
+        "expo-splash-screen",
+        {
+          "image": "./assets/images/splash-icon.png",
+          "imageWidth": 200,
+          "resizeMode": "contain",
+          "backgroundColor": "#ffffff",
+          "dark": {
+            "backgroundColor": "#000000"
+          }
+        }
+      ]
+    ],
     "experiments": {
-      "typedRoutes": true
-    },
-    "owner": "sshader",
-    "entryPoint": "app/App.tsx"
+      "typedRoutes": true,
+      "reactCompiler": true
+    }
   }
 }

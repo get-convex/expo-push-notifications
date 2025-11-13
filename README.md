@@ -4,8 +4,10 @@
 
 <!-- START: Include on https://convex.dev/components -->
 
-This is a Convex component that integrates with [Expo's push notification API](https://docs.expo.dev/push-notifications/overview/)
-to allow sending mobile push notifications to users of your app. It will batch calls to Expo's API and handle retrying delivery.
+This is a Convex component that integrates with
+[Expo's push notification API](https://docs.expo.dev/push-notifications/overview/)
+to allow sending mobile push notifications to users of your app. It will batch
+calls to Expo's API and handle retrying delivery.
 
 <details>
   <summary>Demo GIF</summary>
@@ -51,11 +53,12 @@ export const sendPushNotification = mutation({
 
 ## Pre-requisite: Convex
 
-You'll need an existing Convex project to use the component.
-Convex is a hosted backend platform, including a database, serverless functions,
-and a ton more you can learn about [here](https://docs.convex.dev/get-started).
+You'll need an existing Convex project to use the component. Convex is a hosted
+backend platform, including a database, serverless functions, and a ton more you
+can learn about [here](https://docs.convex.dev/get-started).
 
-Run `npm create convex` or follow any of the [quickstarts](https://docs.convex.dev/home) to set one up.
+Run `npm create convex` or follow any of the
+[quickstarts](https://docs.convex.dev/home) to set one up.
 
 ## Installation
 
@@ -65,12 +68,13 @@ Install the component package:
 npm i @convex-dev/expo-push-notifications
 ```
 
-Create a `convex.config.ts` file in your app's `convex/` folder and install the component by calling `use`:
+Create a `convex.config.ts` file in your app's `convex/` folder and install the
+component by calling `use`:
 
 ```ts
 // convex/convex.config.ts
 import { defineApp } from "convex/server";
-import pushNotifications from "@convex-dev/expo-push-notifications/convex.config";
+import pushNotifications from "@convex-dev/expo-push-notifications/convex.config.js";
 
 const app = defineApp();
 app.use(pushNotifications);
@@ -88,7 +92,8 @@ import { PushNotifications } from "@convex-dev/expo-push-notifications";
 const pushNotifications = new PushNotifications(components.pushNotifications);
 ```
 
-It takes in an optional type parameter (defaulting to `Id<"users">`) for the type to use as a unique identifier for push notification recipients:
+It takes in an optional type parameter (defaulting to `Id<"users">`) for the
+type to use as a unique identifier for push notification recipients:
 
 ```ts
 import { PushNotifications } from "@convex-dev/expo-push-notifications";
@@ -96,13 +101,15 @@ import { PushNotifications } from "@convex-dev/expo-push-notifications";
 export type Email = string & { __isEmail: true };
 
 const pushNotifications = new PushNotifications<Email>(
-  components.pushNotifications
+  components.pushNotifications,
 );
 ```
 
 ## Registering a user for push notifications
 
-Get a user's push notification token following the Expo documentation [here](https://docs.expo.dev/push-notifications/push-notifications-setup/#registering-for-push-notifications), and record it using a Convex mutation:
+Get a user's push notification token following the Expo documentation
+[here](https://docs.expo.dev/push-notifications/push-notifications-setup/#registering-for-push-notifications),
+and record it using a Convex mutation:
 
 ```ts
 // convex/example.ts
@@ -118,9 +125,11 @@ export const recordPushNotificationToken = mutation({
 });
 ```
 
-You can pause and resume push notification sending for a user using the `pausePushNotifications` and `resumePushNotifications` methods.
+You can pause and resume push notification sending for a user using the
+`pausePushNotifications` and `resumePushNotifications` methods.
 
-To determine if a user has a token and their pause status, you can use `getStatusForUser`.
+To determine if a user has a token and their pause status, you can use
+`getStatusForUser`.
 
 ## Send notifications
 
@@ -139,14 +148,16 @@ export const sendPushNotification = mutation({
 });
 ```
 
-You can use the ID returned from `sendPushNotifications` to query the status of the notification using `getNotification`.
-Using this in a query allows you to subscribe to the status of a notification.
+You can use the ID returned from `sendPushNotifications` to query the status of
+the notification using `getNotification`. Using this in a query allows you to
+subscribe to the status of a notification.
 
 You can also view all notifications for a user with `getNotificationsForUser`.
 
 ## Troubleshooting
 
-To add more logging, provide `PushNotifications` with a `logLevel` in the constructor:
+To add more logging, provide `PushNotifications` with a `logLevel` in the
+constructor:
 
 ```ts
 const pushNotifications = new PushNotifications(components.pushNotifications, {
@@ -154,6 +165,7 @@ const pushNotifications = new PushNotifications(components.pushNotifications, {
 });
 ```
 
-The push notification sender can be shutdown gracefully, and then restarted using the `shutdown` and `restart` methods.
+The push notification sender can be shutdown gracefully, and then restarted
+using the `shutdown` and `restart` methods.
 
 <!-- END: Include on https://convex.dev/components -->

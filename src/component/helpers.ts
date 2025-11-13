@@ -1,6 +1,6 @@
-import { MutationCtx } from "./functions.js";
+import type { MutationCtx } from "./functions.js";
 import { internal } from "./_generated/api.js";
-import { Doc } from "./_generated/dataModel.js";
+import type { Doc } from "./_generated/dataModel.js";
 
 export async function ensureCoordinator(ctx: MutationCtx) {
   ctx.logger.debug("Ensuring there's a notification coordinator");
@@ -19,16 +19,16 @@ export async function ensureCoordinator(ctx: MutationCtx) {
   }
   if (activeCoordinators.length === 1) {
     ctx.logger.debug(
-      `Found existing coordinator with ID ${activeCoordinators[0]._id}`
+      `Found existing coordinator with ID ${activeCoordinators[0]._id}`,
     );
     return;
   }
   if (activeCoordinators.length > 1) {
     ctx.logger.error(
-      `Unexpected state: Too many coordinators ${activeCoordinators.length}`
+      `Unexpected state: Too many coordinators ${activeCoordinators.length}`,
     );
     throw new Error(
-      `Unexpected state: Too many coordinators ${activeCoordinators.length}`
+      `Unexpected state: Too many coordinators ${activeCoordinators.length}`,
     );
   }
   const config = await ctx.db.query("config").unique();
@@ -41,7 +41,7 @@ export async function ensureCoordinator(ctx: MutationCtx) {
     internal.internal.coordinateSendingPushNotifications,
     {
       logLevel: ctx.logger.level,
-    }
+    },
   );
   const coordinatorId = await ctx.db.insert("senderCoordinator", {
     jobId: coordinatorJobId,
@@ -87,8 +87,7 @@ export const shutdownGracefully = async (ctx: MutationCtx) => {
       default: {
         const _typeCheck: never = job.state;
         ctx.logger.error(
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any
-          `Unknown job state ${(job.state as any).kind} for sender ${sender._id}. Cleaning it up. `
+          `Unknown job state ${(job.state as any).kind} for sender ${sender._id}. Cleaning it up. `,
         );
         await ctx.db.delete(sender._id);
         break;

@@ -1,7 +1,7 @@
-import { JSONValue, v } from "convex/values";
+import { v, type JSONValue } from "convex/values";
 import { internalAction, internalMutation } from "./functions.js";
 import { internal } from "./_generated/api.js";
-import { Id } from "./_generated/dataModel.js";
+import type { Id } from "./_generated/dataModel.js";
 import { ensureCoordinator } from "./helpers.js";
 import { notificationFields } from "./schema.js";
 
@@ -13,9 +13,9 @@ export const markNotificationState = internalMutation({
         state: v.union(
           v.literal("delivered"),
           v.literal("failed"),
-          v.literal("maybe_delivered")
+          v.literal("maybe_delivered"),
         ),
-      })
+      }),
     ),
     checkJobId: v.id("_scheduled_functions"),
   },
@@ -71,7 +71,7 @@ export const coordinateSendingPushNotifications = internalMutation({
       .withIndex("state", (q) => q.eq("state", "awaiting_delivery"))
       .take(MAX_NOTIFICATIONS_PER_SEND - retryNotifications.length);
     ctx.logger.debug(
-      `Found ${retryNotifications.length} retry notifications and ${unsentNotifications.length} unsent notifications`
+      `Found ${retryNotifications.length} retry notifications and ${unsentNotifications.length} unsent notifications`,
     );
     const notificationsToProcess = [
       ...retryNotifications,
@@ -101,18 +101,18 @@ export const coordinateSendingPushNotifications = internalMutation({
     if (numActiveSenders >= MAX_SENDERS) {
       // Don't add another sender yet
       ctx.logger.debug(
-        `Not starting another sender: already ${numActiveSenders}`
+        `Not starting another sender: already ${numActiveSenders}`,
       );
       ctx.logger.debug(
-        `When one sender finishes, or fails, we'll coordinate sending these notifications.`
+        `When one sender finishes, or fails, we'll coordinate sending these notifications.`,
       );
       return;
     }
     const notificationsToSend = notificationsToProcess.filter(
-      (n) => n.numPreviousFailures < MAX_RETRY_ATTEMPTS
+      (n) => n.numPreviousFailures < MAX_RETRY_ATTEMPTS,
     );
     const notificationsToMarkAsUnableToDeliver = notificationsToProcess.filter(
-      (n) => n.numPreviousFailures >= MAX_RETRY_ATTEMPTS
+      (n) => n.numPreviousFailures >= MAX_RETRY_ATTEMPTS,
     );
 
     for (const notification of notificationsToMarkAsUnableToDeliver) {
@@ -134,7 +134,7 @@ export const coordinateSendingPushNotifications = internalMutation({
       {
         notificationIds: notificationsToSend.map((n) => n._id),
         logLevel: ctx.logger.level,
-      }
+      },
     );
 
     const senderJobId = await ctx.scheduler.runAfter(
@@ -165,14 +165,14 @@ export const coordinateSendingPushNotifications = internalMutation({
           };
         }),
         logLevel: ctx.logger.level,
-      }
+      },
     );
     await ctx.db.insert("senders", {
       jobId: senderJobId,
       checkJobId,
     });
     ctx.logger.debug(
-      `Started a new sender ${senderJobId} with job ${senderJobId} and check job ${checkJobId}`
+      `Started a new sender ${senderJobId} with job ${senderJobId} and check job ${checkJobId}`,
     );
   },
 });
@@ -184,7 +184,7 @@ export const checkForFailedAction = internalMutation({
   handler: async (ctx, { notificationIds }) => {
     console.warn(
       `Could not determine delivery status for ${notificationIds.length} notifications:`,
-      notificationIds
+      notificationIds,
     );
     for (const notificationId of notificationIds) {
       // We don't really know what happened to these notifications,
@@ -204,18 +204,18 @@ export const action_sendPushNotifications = internalAction({
       v.object({
         message: v.object({
           to: v.string(),
-          ...notificationFields
+          ...notificationFields,
         }),
         _id: v.id("notifications"),
-      })
+      }),
     ),
   },
   handler: async (ctx, args) => {
     ctx.logger.debug(
-      `Sending ${args.notifications.length} push notifications via Expo's API`
+      `Sending ${args.notifications.length} push notifications via Expo's API`,
     );
     ctx.logger.debug(
-      `Notification IDs: ${JSON.stringify(args.notifications.map((n) => n._id))}`
+      `Notification IDs: ${JSON.stringify(args.notifications.map((n) => n._id))}`,
     );
     let response: Response;
     try {
@@ -232,10 +232,10 @@ export const action_sendPushNotifications = internalAction({
     } catch (_e) {
       ctx.logger.error(
         "Failed during during fetch for sending push notifications:",
-        _e
+        _e,
       );
       ctx.logger.debug(
-        `Marking ${args.notifications.length} notifications as failed so they can be retried`
+        `Marking ${args.notifications.length} notifications as failed so they can be retried`,
       );
       await ctx.runMutation(internal.internal.markNotificationState, {
         notifications: args.notifications.map((n) => {
@@ -253,10 +253,10 @@ export const action_sendPushNotifications = internalAction({
     }
     if (!response.ok) {
       ctx.logger.warn(
-        `Push notification failed with status ${response.status} and body ${await response.text()}`
+        `Push notification failed with status ${response.status} and body ${await response.text()}`,
       );
       ctx.logger.debug(
-        `Marking ${args.notifications.length} notifications as maybe delivered. They won't be retried.`
+        `Marking ${args.notifications.length} notifications as maybe delivered. They won't be retried.`,
       );
       await ctx.runMutation(internal.internal.markNotificationState, {
         notifications: args.notifications.map((n) => {
@@ -279,7 +279,7 @@ export const action_sendPushNotifications = internalAction({
       >;
     } = await response.json();
     ctx.logger.debug(
-      `Response from Expo's API: ${JSON.stringify(responseBody)}`
+      `Response from Expo's API: ${JSON.stringify(responseBody)}`,
     );
 
     const notificationStates: Array<{
@@ -302,7 +302,7 @@ export const action_sendPushNotifications = internalAction({
       }
     }
     ctx.logger.debug(
-      `Successfully parsed response from Expo, and recording state`
+      `Successfully parsed response from Expo, and recording state`,
     );
     await ctx.runMutation(internal.internal.markNotificationState, {
       notifications: notificationStates,

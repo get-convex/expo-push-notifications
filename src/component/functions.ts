@@ -1,6 +1,6 @@
 import {
   customAction,
-  CustomCtx,
+  type CustomCtx,
   customMutation,
   customQuery,
 } from "convex-helpers/server/customFunctions";
