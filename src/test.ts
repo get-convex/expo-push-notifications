@@ -1,6 +1,5 @@
 /// <reference types="vite/client" />
 import type { TestConvex } from "convex-test";
-import type { GenericSchema, SchemaDefinition } from "convex/server";
 import schema from "./component/schema.js";
 const modules = import.meta.glob("./component/**/*.ts");
 
@@ -10,9 +9,9 @@ const modules = import.meta.glob("./component/**/*.ts");
  * @param name - The name of the component, as registered in convex.config.ts.
  */
 export function register(
-  t: TestConvex<SchemaDefinition<GenericSchema, boolean>>,
+  t: TestConvex<any>,
   name: string = "pushNotifications",
 ) {
-  t.registerComponent(name, schema, modules);
+  t.registerComponent(name, schema as any, modules);
 }
 export default { register, schema, modules };

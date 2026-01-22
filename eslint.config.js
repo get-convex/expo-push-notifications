@@ -13,6 +13,7 @@ export default [
       "example/{app,assets,components,constants,hooks,scripts}/**",
       "example/**/*.config.{js,mjs,ts}",
       "example/expo-env.d.ts",
+      "example/convex/*.js",
     ],
   },
   {
