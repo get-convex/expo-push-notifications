@@ -271,6 +271,7 @@ export const action_sendPushNotifications = internalAction({
         checkJobId: args.checkJobId,
         logLevel: ctx.logger.level,
       });
+      return;
     }
     const responseBody: {
       data: Array<
