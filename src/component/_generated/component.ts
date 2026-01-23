@@ -52,6 +52,11 @@ export type ComponentApi<Name extends string | undefined = string | undefined> =
           mutableContent?: boolean;
           numPreviousFailures: number;
           priority?: "default" | "normal" | "high";
+          richContent?: {
+            audio?: string;
+            image?: string;
+            video?: string;
+          };
           sound?: string | null;
           state:
             | "awaiting_delivery"
@@ -93,6 +98,11 @@ export type ComponentApi<Name extends string | undefined = string | undefined> =
           mutableContent?: boolean;
           numPreviousFailures: number;
           priority?: "default" | "normal" | "high";
+          richContent?: {
+            audio?: string;
+            image?: string;
+            video?: string;
+          };
           sound?: string | null;
           state:
             | "awaiting_delivery"
@@ -168,6 +178,11 @@ export type ComponentApi<Name extends string | undefined = string | undefined> =
               | "time-sensitive";
             mutableContent?: boolean;
             priority?: "default" | "normal" | "high";
+            richContent?: {
+              audio?: string;
+              image?: string;
+              video?: string;
+            };
             sound?: string | null;
             subtitle?: string;
             title?: string;
@@ -200,6 +215,11 @@ export type ComponentApi<Name extends string | undefined = string | undefined> =
                 | "time-sensitive";
               mutableContent?: boolean;
               priority?: "default" | "normal" | "high";
+              richContent?: {
+                audio?: string;
+                image?: string;
+                video?: string;
+              };
               sound?: string | null;
               subtitle?: string;
               title?: string;
