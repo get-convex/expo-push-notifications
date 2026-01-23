@@ -10,7 +10,6 @@ export default [
       "**/_generated/",
       ".expo/**",
       "expo-env.d.ts",
-      "convex/**",
       "scripts/**",
     ],
   },
