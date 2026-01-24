@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.3.1
+
+- Fixes handling of non-ok expo response (credit: sanches89)
+
 ## 0.3.0
 
 - Adds a batch endpoint for sending push notifications

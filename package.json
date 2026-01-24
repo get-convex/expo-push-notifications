@@ -7,7 +7,7 @@
     "email": "support@convex.dev",
     "url": "https://github.com/get-convex/expo-push-notifications/issues"
   },
-  "version": "0.3.0",
+  "version": "0.3.1",
   "license": "Apache-2.0",
   "keywords": [
     "convex",
@@ -20,10 +20,12 @@
     "dev": "run-p -r 'dev:*'",
     "dev:backend": "convex dev --typecheck-components",
     "dev:expo": "cd example && npx expo start",
-    "dev:build": "chokidar 'tsconfig*.json' 'src/**/*.ts' -i '**/*.test.ts' -c 'convex codegen --component-dir ./src/component && npm run build' --initial",
+    "dev:build": "chokidar 'tsconfig*.json' 'src/**/*.ts' -i '**/*.test.ts' -c 'npm run build:codegen' --initial",
+    "predev": "path-exists .env.local dist || (npm run build && convex dev --once)",
     "setup": "npm install && cd example && npm install && cd .. && npm run dev:backend -- --until-success && printf 'EXPO_PUBLIC_CONVEX_URL=' >> example/.env.local && npx convex env get CONVEX_CLOUD_URL >> example/.env.local",
-    "clean": "rm -rf dist *.tsbuildinfo",
     "build": "tsc --project ./tsconfig.build.json",
+    "build:codegen": "npx convex codegen --component-dir ./src/component && npm run build",
+    "build:clean": "rm -rf dist *.tsbuildinfo && npm run build:codegen",
     "typecheck": "tsc --noEmit && tsc -p example && tsc -p example/convex",
     "lint": "eslint . && cd example && npm run lint",
     "all": "run-p -r 'dev:*' 'test:watch'",
@@ -31,10 +33,11 @@
     "test:watch": "vitest --typecheck --clearScreen false",
     "test:debug": "vitest --inspect-brk --no-file-parallelism",
     "test:coverage": "vitest run --coverage --coverage.reporter=text",
-    "prepare": "npm run build",
-    "alpha": "npm run clean && npm ci && run-p test lint typecheck && npm version prerelease --preid alpha && npm publish --tag alpha && git push --tags",
-    "release": "npm run clean && npm ci && run-p test lint typecheck && npm version patch && npm publish && git push --tags",
-    "version": "pbcopy <<<$npm_package_version; vim CHANGELOG.md && prettier -w CHANGELOG.md && git add CHANGELOG.md"
+    "preversion": "npm ci && npm run build:clean && run-p test lint typecheck",
+    "prepublishOnly": "npm whoami || npm login",
+    "alpha": "npm version prerelease --preid alpha && npm publish --tag alpha && git push --follow-tags",
+    "release": "npm version patch && npm publish && git push --follow-tags",
+    "version": "vim -c 'normal o' -c 'normal o## '$npm_package_version CHANGELOG.md && prettier -w CHANGELOG.md && git add CHANGELOG.md"
   },
   "files": [
     "dist",
@@ -63,7 +66,7 @@
     "convex": "^1.24.8"
   },
   "dependencies": {
-    "convex-helpers": "^0.1.58"
+    "convex-helpers": "^0.1.104"
   },
   "devDependencies": {
     "@edge-runtime/vm": "5.0.0",
@@ -81,6 +84,7 @@
     "eslint-plugin-react-refresh": "0.4.26",
     "globals": "15.15.0",
     "npm-run-all2": "8.0.4",
+    "path-exists-cli": "2.0.0",
     "prettier": "3.8.0",
     "typescript": "5.9.3",
     "typescript-eslint": "8.53.0",
