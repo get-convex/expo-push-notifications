@@ -13,12 +13,13 @@ export default [
       "example/{app,assets,components,constants,hooks,scripts}/**",
       "example/**/*.config.{js,mjs,ts}",
       "example/expo-env.d.ts",
+      "example/convex/*.js",
     ],
   },
   {
     files: [
       "src/**/*.{js,mjs,cjs,ts,tsx}",
-      "example/convex/*.{js,mjs,cjs,ts,tsx}",
+      "example/convex/*.{ts,tsx}",
     ],
     languageOptions: {
       parser: tseslint.parser,

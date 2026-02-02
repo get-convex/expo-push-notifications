@@ -11,6 +11,7 @@ export default [
       ".expo/**",
       "expo-env.d.ts",
       "scripts/**",
+      "**/*.js", // Ignore all generated .js files
     ],
   },
   pluginJs.configs.recommended,
