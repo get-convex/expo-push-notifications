@@ -165,6 +165,15 @@ const pushNotifications = new PushNotifications(components.pushNotifications, {
 });
 ```
 
+If you have an Expo access token, pass it as `expoAccessToken` so requests to
+the Expo push API include the `Authorization: Bearer <token>` header:
+
+```ts
+const pushNotifications = new PushNotifications(components.pushNotifications, {
+  expoAccessToken: process.env.EXPO_ACCESS_TOKEN,
+});
+```
+
 The push notification sender can be shutdown gracefully, and then restarted
 using the `shutdown` and `restart` methods.
 

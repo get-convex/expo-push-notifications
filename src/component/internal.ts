@@ -134,6 +134,7 @@ export const coordinateSendingPushNotifications = internalMutation({
       {
         notificationIds: notificationsToSend.map((n) => n._id),
         logLevel: ctx.logger.level,
+        expoAccessToken: ctx.expoAccessToken,
       },
     );
 
@@ -165,6 +166,7 @@ export const coordinateSendingPushNotifications = internalMutation({
           };
         }),
         logLevel: ctx.logger.level,
+        expoAccessToken: ctx.expoAccessToken,
       },
     );
     await ctx.db.insert("senders", {
@@ -220,13 +222,17 @@ export const action_sendPushNotifications = internalAction({
     let response: Response;
     try {
       // https://docs.expo.dev/push-notifications/sending-notifications/#http2-api
+      const headers: Record<string, string> = {
+        Accept: "application/json",
+        "Accept-encoding": "gzip, deflate",
+        "Content-Type": "application/json",
+      };
+      if (ctx.expoAccessToken) {
+        headers.Authorization = `Bearer ${ctx.expoAccessToken}`;
+      }
       response = await fetch("https://exp.host/--/api/v2/push/send", {
         method: "POST",
-        headers: {
-          Accept: "application/json",
-          "Accept-encoding": "gzip, deflate",
-          "Content-Type": "application/json",
-        },
+        headers,
         body: JSON.stringify(args.notifications.map((n) => n.message)),
       });
     } catch (_e) {
@@ -248,6 +254,7 @@ export const action_sendPushNotifications = internalAction({
         }),
         checkJobId: args.checkJobId,
         logLevel: ctx.logger.level,
+        expoAccessToken: ctx.expoAccessToken,
       });
       return;
     }
@@ -270,6 +277,7 @@ export const action_sendPushNotifications = internalAction({
         }),
         checkJobId: args.checkJobId,
         logLevel: ctx.logger.level,
+        expoAccessToken: ctx.expoAccessToken,
       });
       return;
     }
@@ -309,6 +317,7 @@ export const action_sendPushNotifications = internalAction({
       notifications: notificationStates,
       checkJobId: args.checkJobId,
       logLevel: ctx.logger.level,
+      expoAccessToken: ctx.expoAccessToken,
     });
   },
 });
