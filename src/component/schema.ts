@@ -26,6 +26,13 @@ export const notificationFields = {
   channelId: v.optional(v.string()),
   categoryId: v.optional(v.string()),
   mutableContent: v.optional(v.boolean()),
+  richContent: v.optional(
+    v.object({
+      image: v.optional(v.string()),
+      audio: v.optional(v.string()),
+      video: v.optional(v.string()),
+    }),
+  ),
 };
 
 /**
@@ -143,6 +150,18 @@ export type NotificationFields = {
    * Defaults to false.
    */
   mutableContent?: boolean;
+
+  /**
+   * iOS Only
+   *
+   * Rich content to display with the notification.
+   * Contains URLs to media files (image, audio, or video) to be displayed with the notification.
+   */
+  richContent?: {
+    image?: string;
+    audio?: string;
+    video?: string;
+  };
 };
 
 export const notificationState = v.union(
