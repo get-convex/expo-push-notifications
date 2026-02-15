@@ -41,6 +41,7 @@ export async function ensureCoordinator(ctx: MutationCtx) {
     internal.internal.coordinateSendingPushNotifications,
     {
       logLevel: ctx.logger.level,
+      expoAccessToken: ctx.expoAccessToken,
     },
   );
   const coordinatorId = await ctx.db.insert("senderCoordinator", {

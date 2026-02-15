@@ -27,14 +27,22 @@ export type ComponentApi<Name extends string | undefined = string | undefined> =
       deleteNotificationsForUser: FunctionReference<
         "mutation",
         "internal",
-        { logLevel: "DEBUG" | "INFO" | "WARN" | "ERROR"; userId: string },
+        {
+          expoAccessToken?: string;
+          logLevel: "DEBUG" | "INFO" | "WARN" | "ERROR";
+          userId: string;
+        },
         null,
         Name
       >;
       getNotification: FunctionReference<
         "query",
         "internal",
-        { id: string; logLevel: "DEBUG" | "INFO" | "WARN" | "ERROR" },
+        {
+          expoAccessToken?: string;
+          id: string;
+          logLevel: "DEBUG" | "INFO" | "WARN" | "ERROR";
+        },
         null | {
           _contentAvailable?: boolean;
           _creationTime: number;
@@ -71,6 +79,7 @@ export type ComponentApi<Name extends string | undefined = string | undefined> =
         "query",
         "internal",
         {
+          expoAccessToken?: string;
           limit?: number;
           logLevel: "DEBUG" | "INFO" | "WARN" | "ERROR";
           userId: string;
@@ -111,14 +120,22 @@ export type ComponentApi<Name extends string | undefined = string | undefined> =
       getStatusForUser: FunctionReference<
         "query",
         "internal",
-        { logLevel: "DEBUG" | "INFO" | "WARN" | "ERROR"; userId: string },
+        {
+          expoAccessToken?: string;
+          logLevel: "DEBUG" | "INFO" | "WARN" | "ERROR";
+          userId: string;
+        },
         { hasToken: boolean; paused: boolean },
         Name
       >;
       pauseNotificationsForUser: FunctionReference<
         "mutation",
         "internal",
-        { logLevel: "DEBUG" | "INFO" | "WARN" | "ERROR"; userId: string },
+        {
+          expoAccessToken?: string;
+          logLevel: "DEBUG" | "INFO" | "WARN" | "ERROR";
+          userId: string;
+        },
         null,
         Name
       >;
@@ -126,6 +143,7 @@ export type ComponentApi<Name extends string | undefined = string | undefined> =
         "mutation",
         "internal",
         {
+          expoAccessToken?: string;
           logLevel: "DEBUG" | "INFO" | "WARN" | "ERROR";
           pushToken: string;
           userId: string;
@@ -136,14 +154,18 @@ export type ComponentApi<Name extends string | undefined = string | undefined> =
       removePushNotificationToken: FunctionReference<
         "mutation",
         "internal",
-        { logLevel: "DEBUG" | "INFO" | "WARN" | "ERROR"; userId: string },
+        {
+          expoAccessToken?: string;
+          logLevel: "DEBUG" | "INFO" | "WARN" | "ERROR";
+          userId: string;
+        },
         null,
         Name
       >;
       restart: FunctionReference<
         "mutation",
         "internal",
-        { logLevel: "DEBUG" | "INFO" | "WARN" | "ERROR" },
+        { expoAccessToken?: string; logLevel: "DEBUG" | "INFO" | "WARN" | "ERROR" },
         boolean,
         Name
       >;
@@ -152,6 +174,7 @@ export type ComponentApi<Name extends string | undefined = string | undefined> =
         "internal",
         {
           allowUnregisteredTokens?: boolean;
+          expoAccessToken?: string;
           logLevel: "DEBUG" | "INFO" | "WARN" | "ERROR";
           notification: {
             _contentAvailable?: boolean;
@@ -183,6 +206,7 @@ export type ComponentApi<Name extends string | undefined = string | undefined> =
         "internal",
         {
           allowUnregisteredTokens?: boolean;
+          expoAccessToken?: string;
           logLevel: "DEBUG" | "INFO" | "WARN" | "ERROR";
           notifications: Array<{
             notification: {
@@ -214,14 +238,18 @@ export type ComponentApi<Name extends string | undefined = string | undefined> =
       shutdown: FunctionReference<
         "mutation",
         "internal",
-        { logLevel: "DEBUG" | "INFO" | "WARN" | "ERROR" },
+        { expoAccessToken?: string; logLevel: "DEBUG" | "INFO" | "WARN" | "ERROR" },
         { data?: any; message: string },
         Name
       >;
       unpauseNotificationsForUser: FunctionReference<
         "mutation",
         "internal",
-        { logLevel: "DEBUG" | "INFO" | "WARN" | "ERROR"; userId: string },
+        {
+          expoAccessToken?: string;
+          logLevel: "DEBUG" | "INFO" | "WARN" | "ERROR";
+          userId: string;
+        },
         null,
         Name
       >;
