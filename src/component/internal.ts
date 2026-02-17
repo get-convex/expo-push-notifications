@@ -1,9 +1,13 @@
-import { v, type JSONValue } from "convex/values";
+import { v } from "convex/values";
 import { internalAction, internalMutation } from "./functions.js";
 import { internal } from "./_generated/api.js";
 import type { Id } from "./_generated/dataModel.js";
 import { ensureCoordinator } from "./helpers.js";
 import { notificationFields } from "./schema.js";
+import type {
+  ExpoPushSuccessTicket,
+  ExpoPushErrorTicket,
+} from "expo-server-sdk";
 
 export const markNotificationState = internalMutation({
   args: {
@@ -158,6 +162,8 @@ export const coordinateSendingPushNotifications = internalMutation({
               badge: n.metadata.badge ?? undefined,
               interruptionLevel: n.metadata.interruptionLevel ?? undefined,
               channelId: n.metadata.channelId ?? undefined,
+              icon: n.metadata.icon ?? undefined,
+              richContent: n.metadata.richContent ?? undefined,
               categoryId: n.metadata.categoryId ?? undefined,
               mutableContent: n.metadata.mutableContent ?? undefined,
             },
@@ -274,10 +280,7 @@ export const action_sendPushNotifications = internalAction({
       return;
     }
     const responseBody: {
-      data: Array<
-        | { status: "ok"; id: string }
-        | { status: "error"; message: string; details: JSONValue }
-      >;
+      data: Array<ExpoPushSuccessTicket | ExpoPushErrorTicket>;
     } = await response.json();
     ctx.logger.debug(
       `Response from Expo's API: ${JSON.stringify(responseBody)}`,

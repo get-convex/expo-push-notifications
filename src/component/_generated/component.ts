@@ -52,7 +52,9 @@ export type ComponentApi<Name extends string | undefined = string | undefined> =
           mutableContent?: boolean;
           numPreviousFailures: number;
           priority?: "default" | "normal" | "high";
-          sound?: string | null;
+          icon?: string;
+          richContent?: { image?: string };
+          sound?: string | null | { critical?: boolean; name?: string | null; volume?: number };
           state:
             | "awaiting_delivery"
             | "in_progress"
@@ -93,7 +95,9 @@ export type ComponentApi<Name extends string | undefined = string | undefined> =
           mutableContent?: boolean;
           numPreviousFailures: number;
           priority?: "default" | "normal" | "high";
-          sound?: string | null;
+          icon?: string;
+          richContent?: { image?: string };
+          sound?: string | null | { critical?: boolean; name?: string | null; volume?: number };
           state:
             | "awaiting_delivery"
             | "in_progress"
@@ -168,7 +172,9 @@ export type ComponentApi<Name extends string | undefined = string | undefined> =
               | "time-sensitive";
             mutableContent?: boolean;
             priority?: "default" | "normal" | "high";
-            sound?: string | null;
+            icon?: string;
+          richContent?: { image?: string };
+          sound?: string | null | { critical?: boolean; name?: string | null; volume?: number };
             subtitle?: string;
             title?: string;
             ttl?: number;
@@ -200,7 +206,9 @@ export type ComponentApi<Name extends string | undefined = string | undefined> =
                 | "time-sensitive";
               mutableContent?: boolean;
               priority?: "default" | "normal" | "high";
-              sound?: string | null;
+              icon?: string;
+          richContent?: { image?: string };
+          sound?: string | null | { critical?: boolean; name?: string | null; volume?: number };
               subtitle?: string;
               title?: string;
               ttl?: number;

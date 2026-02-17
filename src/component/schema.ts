@@ -1,5 +1,6 @@
 import { defineSchema, defineTable } from "convex/server";
 import { v } from "convex/values";
+import type { ExpoPushMessage } from "expo-server-sdk";
 
 // https://docs.expo.dev/push-notifications/sending-notifications/#message-request-format
 export const notificationFields = {
@@ -13,7 +14,17 @@ export const notificationFields = {
     v.union(v.literal("default"), v.literal("normal"), v.literal("high")),
   ),
   subtitle: v.optional(v.string()),
-  sound: v.optional(v.union(v.string(), v.null())),
+  sound: v.optional(
+    v.union(
+      v.string(),
+      v.null(),
+      v.object({
+        critical: v.optional(v.boolean()),
+        name: v.optional(v.union(v.string(), v.null())),
+        volume: v.optional(v.number()),
+      }),
+    ),
+  ),
   badge: v.optional(v.number()),
   interruptionLevel: v.optional(
     v.union(
@@ -24,126 +35,13 @@ export const notificationFields = {
     ),
   ),
   channelId: v.optional(v.string()),
+  icon: v.optional(v.string()),
+  richContent: v.optional(v.object({ image: v.optional(v.string()) })),
   categoryId: v.optional(v.string()),
   mutableContent: v.optional(v.boolean()),
 };
 
-/**
- * Notification fields for push notifications.
- */
-export type NotificationFields = {
-  /**
-   * iOS Only
-   *
-   * When this is set to true, the notification will cause the iOS app to start in the background to run a background task.
-   * Your app needs to be configured to support this.
-   */
-  _contentAvailable?: boolean;
-
-  /**
-   * Android and iOS
-   *
-   * A JSON object delivered to your app. It may be up to about 4KiB;
-   * the total notification payload sent to Apple and Google must be at most 4KiB or else you will get a "Message Too Big" error.
-   */
-  data?: any;
-
-  /**
-   * Android and iOS
-   *
-   * The title to display in the notification. Often displayed above the notification body.
-   * Maps to AndroidNotification.title and aps.alert.title.
-   */
-  title: string;
-
-  /**
-   * Android and iOS
-   *
-   * The message to display in the notification. Maps to AndroidNotification.body and aps.alert.body.
-   */
-  body?: string;
-
-  /**
-   * Android and iOS
-   *
-   * Time to Live: the number of seconds for which the message may be kept around for redelivery
-   * if it hasn't been delivered yet. Defaults to undefined to use the respective defaults of each provider
-   * (1 month for Android/FCM as well as iOS/APNs).
-   */
-  ttl?: number;
-
-  /**
-   * Android and iOS
-   *
-   * Timestamp since the Unix epoch specifying when the message expires.
-   * Same effect as ttl (ttl takes precedence over expiration).
-   */
-  expiration?: number;
-
-  /**
-   * Android and iOS
-   *
-   * The delivery priority of the message.
-   * Specify default or omit this field to use the default priority on each platform ("normal" on Android and "high" on iOS).
-   */
-  priority?: "default" | "normal" | "high";
-
-  /**
-   * iOS Only
-   *
-   * The subtitle to display in the notification below the title.
-   * Maps to aps.alert.subtitle.
-   */
-  subtitle?: string;
-
-  /**
-   * iOS Only
-   *
-   * Play a sound when the recipient receives this notification. Specify default to play the device's default notification sound,
-   * or omit this field to play no sound. Custom sounds need to be configured via the config plugin and
-   * then specified including the file extension. Example: bells_sound.wav.
-   */
-  sound?: string | null;
-
-  /**
-   * iOS Only
-   *
-   * Number to display in the badge on the app icon. Specify zero to clear the badge.
-   */
-  badge?: number;
-
-  /**
-   * iOS Only
-   *
-   * The importance and delivery timing of a notification.
-   * The string values correspond to the UNNotificationInterruptionLevel enumeration cases.
-   */
-  interruptionLevel?: "active" | "critical" | "passive" | "time-sensitive";
-
-  /**
-   * Android Only
-   *
-   * ID of the Notification Channel through which to display this notification.
-   * If an ID is specified but the corresponding channel does not exist on the device (that has not yet been created by your app),
-   * the notification will not be displayed to the user.
-   */
-  channelId?: string;
-
-  /**
-   * Android and iOS
-   *
-   * ID of the notification category that this notification is associated with.
-   */
-  categoryId?: string;
-
-  /**
-   * iOS Only
-   *
-   * Specifies whether this notification can be intercepted by the client app.
-   * Defaults to false.
-   */
-  mutableContent?: boolean;
-};
+export type NotificationFields = Omit<ExpoPushMessage, "to">;
 
 export const notificationState = v.union(
   v.literal("awaiting_delivery"),
