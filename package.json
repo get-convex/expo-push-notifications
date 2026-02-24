@@ -16,6 +16,7 @@
     "notification"
   ],
   "type": "module",
+  "workspaces": ["example"],
   "scripts": {
     "dev": "run-p -r 'dev:*'",
     "dev:backend": "convex dev --typecheck-components",
