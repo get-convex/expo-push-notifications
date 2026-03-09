@@ -1,7 +1,7 @@
 import { v } from "convex/values";
 import { internal } from "./_generated/api.js";
-import { internalAction } from "./_generated/server.js";
 import type { Id } from "./_generated/dataModel.js";
+import { internalAction } from "./functions.js";
 
 const vSendResult = v.union(
   v.null(),
@@ -39,6 +39,7 @@ export const callExpoPushApiWithBatch = internalAction({
       numPreviousFailures: number;
     }> = await ctx.runQuery(internal.notifs.getNotificationsByIds, {
       notificationIds: args.notificationIds,
+      logLevel: ctx.logger.level,
     });
 
     const inProgress = notifications.filter(

@@ -4,11 +4,9 @@ import { RateLimiter } from "@convex-dev/rate-limiter";
 import type { ComponentApi as RateLimiterComponentApi } from "@convex-dev/rate-limiter/_generated/component.js";
 import type { ComponentApi as WorkpoolComponentApi } from "@convex-dev/workpool/_generated/component.js";
 import { components, internal } from "./_generated/api.js";
-import {
-  internalMutation,
-  type MutationCtx,
-} from "./_generated/server.js";
+import type { MutationCtx as RawMutationCtx } from "./_generated/server.js";
 import type { Doc, Id } from "./_generated/dataModel.js";
+import { internalMutation } from "./functions.js";
 import {
   BATCH_SIZE,
   BASE_BATCH_DELAY,
@@ -25,6 +23,7 @@ import {
   resetCanceledNotification,
   scheduleRetry,
 } from "./notifs.js";
+import type { LogLevel } from "../logging/index.js";
 const POOL_MAX_PARALLELISM = 8;
 
 const componentRefs: {
@@ -48,9 +47,14 @@ const expoApiRateLimiter = new RateLimiter(componentRefs.rateLimiter, {
 });
 
 type SchedulingCtx = {
-  db: MutationCtx["db"];
-  scheduler: MutationCtx["scheduler"];
+  db: RawMutationCtx["db"];
+  scheduler: RawMutationCtx["scheduler"];
+  logger?: { level: LogLevel };
 };
+
+function getLogLevel(ctx: SchedulingCtx): LogLevel {
+  return ctx.logger?.level ?? "INFO";
+}
 
 async function upsertNextBatchRun(
   ctx: SchedulingCtx,
@@ -169,6 +173,7 @@ async function syncNextBatchRun(
     {
       reloop: false,
       segment,
+      logLevel: getLogLevel(ctx),
     },
   );
 
@@ -195,11 +200,11 @@ export async function scheduleBatchRun(
   await syncNextBatchRun(ctx, segment);
 }
 
-export async function cancelPendingBatches(ctx: MutationCtx) {
+export async function cancelPendingBatches(ctx: RawMutationCtx) {
   await notificationPool.cancelAll(ctx);
 }
 
-async function getDelay(ctx: MutationCtx): Promise<number> {
+async function getDelay(ctx: RawMutationCtx): Promise<number> {
   const limit = await expoApiRateLimiter.limit(ctx, "expoApi", {
     reserve: true,
   });
@@ -267,7 +272,7 @@ export const makeBatch = internalMutation({
     await notificationPool.enqueueAction(
       ctx,
       internal.expo.callExpoPushApiWithBatch,
-      { notificationIds },
+      { notificationIds, logLevel: ctx.logger.level },
       {
         retry: {
           maxAttempts: options.retryAttempts,
@@ -283,6 +288,7 @@ export const makeBatch = internalMutation({
     const runId = await ctx.scheduler.runAfter(0, internal.batch.makeBatch, {
       reloop: true,
       segment: args.segment,
+      logLevel: ctx.logger.level,
     });
     await upsertNextBatchRun(ctx, runId, args.segment);
 

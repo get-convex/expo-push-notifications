@@ -1,9 +1,7 @@
 import { v } from "convex/values";
-import {
-  internalQuery,
-  type MutationCtx,
-} from "./_generated/server.js";
+import type { MutationCtx } from "./_generated/server.js";
 import type { Doc, Id } from "./_generated/dataModel.js";
+import { internalQuery } from "./functions.js";
 import { FINALIZED_EPOCH } from "./schema.js";
 import {
   MESSAGE_RETRY_BACKOFF_BASE,

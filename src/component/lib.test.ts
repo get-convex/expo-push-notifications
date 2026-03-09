@@ -96,6 +96,7 @@ describe("push notification pipeline", () => {
 
     const result = await t.action(internal.expo.callExpoPushApiWithBatch, {
       notificationIds: [id1, id2],
+      logLevel: "ERROR",
     });
 
     expect(result).toEqual({
@@ -140,6 +141,7 @@ describe("push notification pipeline", () => {
 
     const result = await t.action(internal.expo.callExpoPushApiWithBatch, {
       notificationIds: [id],
+      logLevel: "ERROR",
     });
 
     expect(result).toEqual({
@@ -177,6 +179,7 @@ describe("push notification pipeline", () => {
     await expect(
       t.action(internal.expo.callExpoPushApiWithBatch, {
         notificationIds: [id],
+        logLevel: "ERROR",
       }),
     ).rejects.toThrow("Expo API error: 503 Svc oops");
   });
