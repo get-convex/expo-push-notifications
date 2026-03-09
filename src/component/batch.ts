@@ -1,25 +1,27 @@
 import { v } from "convex/values";
 import { Workpool } from "@convex-dev/workpool";
-import { RateLimiter } from "@convex-dev/rate-limiter";
-import type { ComponentApi as RateLimiterComponentApi } from "@convex-dev/rate-limiter/_generated/component.js";
 import type { ComponentApi as WorkpoolComponentApi } from "@convex-dev/workpool/_generated/component.js";
 import { components, internal } from "./_generated/api.js";
 import type { MutationCtx as RawMutationCtx } from "./_generated/server.js";
-import type { Doc, Id } from "./_generated/dataModel.js";
+import type { Id } from "./_generated/dataModel.js";
 import { internalMutation } from "./functions.js";
 import {
   BATCH_SIZE,
   BASE_BATCH_DELAY,
   DEFAULT_RUNTIME_CONFIG,
-  EXPO_ONE_CALL_EVERY_MS,
   getDelayUntilSegment,
   getFutureSegment,
   getSegment,
   type RuntimeConfig,
 } from "./shared.js";
 import {
+  finalizeExhaustedAndReturnDeliverableNotifications,
+  getEarliestPendingNotificationSegment,
+  getEligibleNotificationsForBatch,
+  markDelivered,
   markFailed,
   markMaybeDelivered,
+  markNotificationsInProgress,
   resetCanceledNotification,
   scheduleRetry,
 } from "./notifs.js";
@@ -28,7 +30,6 @@ const POOL_MAX_PARALLELISM = 8;
 
 const componentRefs: {
   pushNotificationWorkpool: WorkpoolComponentApi<"pushNotificationWorkpool">;
-  rateLimiter: RateLimiterComponentApi<"rateLimiter">;
 } = components;
 
 const notificationPool = new Workpool(
@@ -38,17 +39,7 @@ const notificationPool = new Workpool(
   },
 );
 
-const expoApiRateLimiter = new RateLimiter(componentRefs.rateLimiter, {
-  expoApi: {
-    kind: "fixed window",
-    period: EXPO_ONE_CALL_EVERY_MS,
-    rate: 1,
-  },
-});
-
-type SchedulingCtx = {
-  db: RawMutationCtx["db"];
-  scheduler: RawMutationCtx["scheduler"];
+type SchedulingCtx = RawMutationCtx & {
   logger?: { level: LogLevel };
 };
 
@@ -96,41 +87,7 @@ async function upsertRuntimeConfig(ctx: SchedulingCtx, options: RuntimeConfig) {
 }
 
 async function getEarliestPendingSegment(ctx: SchedulingCtx) {
-  const currentSegment = getSegment(Date.now());
-  const [retryNotification, awaitingNotification] = await Promise.all([
-    ctx.db
-      .query("notifications")
-      .withIndex("by_state_segment", (q) => q.eq("state", "needs_retry"))
-      .first(),
-    ctx.db
-      .query("notifications")
-      .withIndex("by_state_segment", (q) =>
-        q.eq("state", "awaiting_delivery"),
-      )
-      .first(),
-  ]);
-
-  if (!retryNotification && !awaitingNotification) {
-    return null;
-  }
-  if (!retryNotification) {
-    return typeof awaitingNotification!.segment === "number"
-      ? awaitingNotification!.segment
-      : currentSegment;
-  }
-  if (!awaitingNotification) {
-    return typeof retryNotification.segment === "number"
-      ? retryNotification.segment
-      : currentSegment;
-  }
-  return Math.min(
-    typeof retryNotification.segment === "number"
-      ? retryNotification.segment
-      : currentSegment,
-    typeof awaitingNotification.segment === "number"
-      ? awaitingNotification.segment
-      : currentSegment,
-  );
+  return await getEarliestPendingNotificationSegment(ctx, getSegment(Date.now()));
 }
 
 async function syncNextBatchRun(
@@ -142,6 +99,10 @@ async function syncNextBatchRun(
   const currentSegment = getSegment(now);
 
   if (segment === null) {
+    // No queued work remains, so clear the scheduler marker. If the recorded
+    // run is still in the future, cancel it; if it is the run currently
+    // executing, just drop the row so the state machine no longer thinks a
+    // future wake-up exists.
     if (existing) {
       if (
         typeof existing.segment !== "number" ||
@@ -155,18 +116,25 @@ async function syncNextBatchRun(
   }
 
   if (existing && typeof existing.segment === "number") {
-    if (existing.segment <= segment) {
+    // Keep an already-scheduled future wake-up if it will fire no later than
+    // the segment we want. This is the "scheduler is already armed" state.
+    if (existing.segment > currentSegment && existing.segment <= segment) {
       return;
     }
+    // Otherwise replace the recorded run. Future runs are canceled; stale rows
+    // from the currently executing segment are just removed and superseded.
     if (existing.segment > currentSegment) {
       await ctx.scheduler.cancel(existing.runId);
     }
     await ctx.db.delete(existing._id);
   } else if (existing) {
+    // Defensive cleanup for older rows that predate the `segment` field.
     await ctx.scheduler.cancel(existing.runId);
     await ctx.db.delete(existing._id);
   }
 
+  // Record the next wake-up that advances the batcher state machine back into
+  // `makeBatch` at the chosen eligible segment.
   const runId = await ctx.scheduler.runAfter(
     getDelayUntilSegment(now, segment),
     internal.batch.makeBatch,
@@ -204,54 +172,40 @@ export async function cancelPendingBatches(ctx: RawMutationCtx) {
   await notificationPool.cancelAll(ctx);
 }
 
-async function getDelay(ctx: RawMutationCtx): Promise<number> {
-  const limit = await expoApiRateLimiter.limit(ctx, "expoApi", {
-    reserve: true,
-  });
-  const jitter = Math.random() * 100;
-  return limit.retryAfter ? limit.retryAfter + jitter : 0;
-}
-
 export const makeBatch = internalMutation({
   args: { reloop: v.boolean(), segment: v.number() },
   returns: v.null(),
   handler: async (ctx, args) => {
     const options = await getRuntimeConfig(ctx);
 
-    const retryNotifications = await ctx.db
-      .query("notifications")
-      .withIndex("by_state_segment", (q) =>
-        q.eq("state", "needs_retry").lte("segment", args.segment),
-      )
-      .take(BATCH_SIZE);
+    // Pull the notifications that are eligible for this scheduler segment,
+    // prioritizing retries ahead of brand new deliveries.
+    const notifications = await getEligibleNotificationsForBatch(
+      ctx,
+      args.segment,
+      BATCH_SIZE,
+    );
 
-    const unsentNotifications = await ctx.db
-      .query("notifications")
-      .withIndex("by_state_segment", (q) =>
-        q.eq("state", "awaiting_delivery").lte("segment", args.segment),
-      )
-      .take(BATCH_SIZE - retryNotifications.length);
-
-    const notifications = [...retryNotifications, ...unsentNotifications];
-    const notificationsToSend: Doc<"notifications">[] = [];
-
-    for (const notification of notifications) {
-      if (notification.numPreviousFailures >= options.retryAttempts) {
-        await ctx.db.patch(notification._id, {
-          state: "unable_to_deliver",
-          finalizedAt: Date.now(),
-        });
-      } else {
-        notificationsToSend.push(notification);
-      }
-    }
+    // Finalize notifications that have exhausted retries and keep the rest in
+    // the candidate batch for this pass.
+    const notificationsToSend =
+      await finalizeExhaustedAndReturnDeliverableNotifications(
+      ctx,
+      notifications,
+      options.retryAttempts,
+    );
 
     if (notificationsToSend.length === 0) {
+      // Nothing is ready to send in this segment, so re-sync the scheduler with
+      // whatever queued work remains.
       await scheduleBatchRun(ctx, options);
       return null;
     }
 
     if (args.reloop && notificationsToSend.length < BATCH_SIZE) {
+      // We already dispatched a batch in this cycle. If the immediate follow-up
+      // pass only finds a small remainder, defer it by one batching window
+      // instead of sending a tiny trailing batch right away.
       await scheduleBatchRun(
         ctx,
         options,
@@ -260,15 +214,14 @@ export const makeBatch = internalMutation({
       return null;
     }
 
-    for (const notification of notificationsToSend) {
-      await ctx.db.patch(notification._id, {
-        state: "in_progress",
-      });
-    }
+    // Reserve these notifications for the outgoing workpool job so no other
+    // batch pass tries to pick them up concurrently.
+    await markNotificationsInProgress(ctx, notificationsToSend);
 
-    const delay = await getDelay(ctx);
     const notificationIds = notificationsToSend.map((n) => n._id);
 
+    // Hand the concrete Expo send to workpool. Request-level retries happen
+    // there; per-notification state changes happen later in `onPushComplete`.
     await notificationPool.enqueueAction(
       ctx,
       internal.expo.callExpoPushApiWithBatch,
@@ -279,12 +232,13 @@ export const makeBatch = internalMutation({
           initialBackoffMs: options.initialBackoffMs,
           base: 2,
         },
-        runAfter: delay,
         context: { notificationIds },
         onComplete: internal.batch.onPushComplete,
       },
     );
 
+    // Immediately re-enter `makeBatch` so the batcher can keep draining any
+    // additional already-eligible work without waiting for another timed wakeup.
     const runId = await ctx.scheduler.runAfter(0, internal.batch.makeBatch, {
       reloop: true,
       segment: args.segment,
@@ -327,15 +281,11 @@ export const onPushComplete = notificationPool.defineOnComplete({
 
       for (const notificationResult of result.notifications) {
         if (notificationResult.state === "delivered") {
-          const notification = await ctx.db.get(notificationResult.id);
-          if (!notification || notification.state !== "in_progress") {
-            continue;
-          }
-          await ctx.db.patch(notificationResult.id, {
-            state: "delivered",
-            expoTicketId: notificationResult.expoTicketId,
-            finalizedAt: Date.now(),
-          });
+          await markDelivered(
+            ctx,
+            notificationResult.id,
+            notificationResult.expoTicketId,
+          );
         } else if (notificationResult.state === "needs_retry") {
           await scheduleRetry(
             ctx,

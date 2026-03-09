@@ -209,6 +209,45 @@ describe("push notification pipeline", () => {
     expect(notification?.finalizedAt).toBe(FINALIZED_EPOCH);
   });
 
+  it("reschedules a deferred partial reloop after the current run", async () => {
+    const currentSegment = Math.floor(1_000_000 / SEGMENT_MS);
+    const futureSegment = Math.floor(
+      (1_000_000 + BASE_BATCH_DELAY + SEGMENT_MS - 1) / SEGMENT_MS,
+    );
+
+    await t.run(async (ctx: any) => {
+      const runId = await ctx.scheduler.runAfter(0, internal.batch.makeBatch, {
+        reloop: true,
+        segment: currentSegment,
+        logLevel: "ERROR",
+      });
+      await ctx.db.insert("nextBatchRun", {
+        runId,
+        segment: currentSegment,
+      });
+      await ctx.db.insert("notifications", {
+        token: "ExponentPushToken[one]",
+        metadata: { title: "one" },
+        state: "awaiting_delivery",
+        numPreviousFailures: 0,
+        segment: currentSegment,
+        finalizedAt: FINALIZED_EPOCH,
+      });
+    });
+
+    await t.mutation(internal.batch.makeBatch, {
+      reloop: true,
+      segment: currentSegment,
+      logLevel: "ERROR",
+    });
+
+    const nextBatchRun = await t.run(async (ctx: any) => {
+      return await ctx.db.query("nextBatchRun").unique();
+    });
+
+    expect(nextBatchRun?.segment).toBe(futureSegment);
+  });
+
   it("marks exhausted whole-batch failures as maybe_delivered", async () => {
     const id = await t.run(async (ctx: any) =>
       ctx.db.insert("notifications", {

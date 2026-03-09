@@ -1,7 +1,10 @@
 import { v } from "convex/values";
-import { internal } from "./_generated/api.js";
+import { RateLimiter } from "@convex-dev/rate-limiter";
+import type { ComponentApi as RateLimiterComponentApi } from "@convex-dev/rate-limiter/_generated/component.js";
+import { components, internal } from "./_generated/api.js";
 import type { Id } from "./_generated/dataModel.js";
 import { internalAction } from "./functions.js";
+import { EXPO_ONE_CALL_EVERY_MS } from "./shared.js";
 
 const vSendResult = v.union(
   v.null(),
@@ -27,6 +30,22 @@ function isRetryableExpoTicketError(errorCode?: string) {
   return errorCode === "MessageRateExceeded";
 }
 
+const componentRefs: {
+  rateLimiter: RateLimiterComponentApi<"rateLimiter">;
+} = components;
+
+const expoApiRateLimiter = new RateLimiter(componentRefs.rateLimiter, {
+  expoApi: {
+    kind: "fixed window",
+    period: EXPO_ONE_CALL_EVERY_MS,
+    rate: 1,
+  },
+});
+
+function sleep(ms: number) {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
 export const callExpoPushApiWithBatch = internalAction({
   args: { notificationIds: v.array(v.id("notifications")) },
   returns: vSendResult,
@@ -47,6 +66,14 @@ export const callExpoPushApiWithBatch = internalAction({
     );
     if (inProgress.length === 0) {
       return null;
+    }
+
+    const limit = await expoApiRateLimiter.limit(ctx, "expoApi", {
+      reserve: true,
+    });
+    if (limit.retryAfter) {
+      const jitter = Math.random() * 100;
+      await sleep(limit.retryAfter + jitter);
     }
 
     const response = await fetch("https://exp.host/--/api/v2/push/send", {

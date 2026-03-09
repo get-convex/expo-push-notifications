@@ -1,5 +1,5 @@
 import { v } from "convex/values";
-import type { MutationCtx } from "./_generated/server.js";
+import type { MutationCtx, QueryCtx } from "./_generated/server.js";
 import type { Doc, Id } from "./_generated/dataModel.js";
 import { internalQuery } from "./functions.js";
 import { FINALIZED_EPOCH } from "./schema.js";
@@ -37,6 +37,99 @@ export const getNotificationsByIds = internalQuery({
       }));
   },
 });
+
+function getEffectiveSegment(
+  segment: number | undefined,
+  fallbackSegment: number,
+) {
+  return typeof segment === "number" ? segment : fallbackSegment;
+}
+
+export async function getEarliestPendingNotificationSegment(
+  ctx: QueryCtx | MutationCtx,
+  fallbackSegment: number,
+) {
+  const [retryNotification, awaitingNotification] = await Promise.all([
+    ctx.db
+      .query("notifications")
+      .withIndex("by_state_segment", (q) => q.eq("state", "needs_retry"))
+      .first(),
+    ctx.db
+      .query("notifications")
+      .withIndex("by_state_segment", (q) =>
+        q.eq("state", "awaiting_delivery"),
+      )
+      .first(),
+  ]);
+
+  if (!retryNotification && !awaitingNotification) {
+    return null;
+  }
+  if (!retryNotification) {
+    return getEffectiveSegment(awaitingNotification!.segment, fallbackSegment);
+  }
+  if (!awaitingNotification) {
+    return getEffectiveSegment(retryNotification.segment, fallbackSegment);
+  }
+  return Math.min(
+    getEffectiveSegment(retryNotification.segment, fallbackSegment),
+    getEffectiveSegment(awaitingNotification.segment, fallbackSegment),
+  );
+}
+
+export async function getEligibleNotificationsForBatch(
+  ctx: QueryCtx | MutationCtx,
+  segment: number,
+  batchSize: number,
+) {
+  const retryNotifications = await ctx.db
+    .query("notifications")
+    .withIndex("by_state_segment", (q) =>
+      q.eq("state", "needs_retry").lte("segment", segment),
+    )
+    .take(batchSize);
+
+  const unsentNotifications = await ctx.db
+    .query("notifications")
+    .withIndex("by_state_segment", (q) =>
+      q.eq("state", "awaiting_delivery").lte("segment", segment),
+    )
+    .take(batchSize - retryNotifications.length);
+
+  return [...retryNotifications, ...unsentNotifications];
+}
+
+export async function finalizeExhaustedAndReturnDeliverableNotifications(
+  ctx: MutationCtx,
+  notifications: Doc<"notifications">[],
+  retryAttempts: number,
+) {
+  const notificationsToSend: Doc<"notifications">[] = [];
+
+  for (const notification of notifications) {
+    if (notification.numPreviousFailures >= retryAttempts) {
+      await ctx.db.patch(notification._id, {
+        state: "unable_to_deliver",
+        finalizedAt: Date.now(),
+      });
+      continue;
+    }
+    notificationsToSend.push(notification);
+  }
+
+  return notificationsToSend;
+}
+
+export async function markNotificationsInProgress(
+  ctx: MutationCtx,
+  notifications: Doc<"notifications">[],
+) {
+  for (const notification of notifications) {
+    await ctx.db.patch(notification._id, {
+      state: "in_progress",
+    });
+  }
+}
 
 function formatErrorMessage(errorMessage?: string, errorCode?: string) {
   return errorCode
@@ -99,6 +192,23 @@ export async function markFailed(
   await ctx.db.patch(notificationId, {
     state: "failed",
     errorMessage: formatErrorMessage(errorMessage, errorCode),
+    finalizedAt: Date.now(),
+  });
+}
+
+export async function markDelivered(
+  ctx: MutationCtx,
+  notificationId: Id<"notifications">,
+  expoTicketId?: string,
+) {
+  const notification = await ctx.db.get(notificationId);
+  if (!notification || notification.state !== "in_progress") {
+    return;
+  }
+
+  await ctx.db.patch(notificationId, {
+    state: "delivered",
+    expoTicketId,
     finalizedAt: Date.now(),
   });
 }
