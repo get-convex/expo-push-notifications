@@ -7,13 +7,9 @@ import {
 } from "./schema.js";
 import { ensureBatchRunScheduled, shutdownGracefully } from "./helpers.js";
 import { api } from "./_generated/api.js";
+import { BASE_BATCH_DELAY, getFutureSegment } from "./notifs.js";
 
 const DEFAULT_LIMIT = 1000;
-const SEGMENT_MS = 125;
-
-function getSegment(now: number) {
-  return Math.floor(now / SEGMENT_MS);
-}
 
 export const recordPushNotificationToken = mutation({
   args: {
@@ -134,7 +130,7 @@ async function sendPushNotificationHandler(
     metadata: args.notification,
     state: "awaiting_delivery",
     numPreviousFailures: 0,
-    segment: getSegment(Date.now()),
+    segment: getFutureSegment(Date.now(), BASE_BATCH_DELAY),
     finalizedAt: FINALIZED_EPOCH,
   });
   ctx.logger.debug(`Recording notification for user ${args.userId}`);

@@ -15,6 +15,7 @@ export const FINALIZED_EPOCH = Number.MAX_SAFE_INTEGER;
 export default defineSchema({
   nextBatchRun: defineTable({
     runId: v.id("_scheduled_functions"),
+    segment: v.number(),
   }),
   lastOptions: defineTable({
     initialBackoffMs: v.number(),

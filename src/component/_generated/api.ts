@@ -8,9 +8,11 @@
  * @module
  */
 
+import type * as batch from "../batch.js";
+import type * as expo from "../expo.js";
 import type * as functions from "../functions.js";
 import type * as helpers from "../helpers.js";
-import type * as lib from "../lib.js";
+import type * as notifs from "../notifs.js";
 import type * as public_ from "../public.js";
 import type * as shared from "../shared.js";
 
@@ -22,9 +24,11 @@ import type {
 import { anyApi, componentsGeneric } from "convex/server";
 
 const fullApi: ApiFromModules<{
+  batch: typeof batch;
+  expo: typeof expo;
   functions: typeof functions;
   helpers: typeof helpers;
-  lib: typeof lib;
+  notifs: typeof notifs;
   public: typeof public_;
   shared: typeof shared;
 }> = anyApi as any;
