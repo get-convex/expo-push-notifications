@@ -20,7 +20,6 @@ import {
   type RuntimeConfig,
 } from "./shared.js";
 import {
-  backfillLegacyNotificationFields,
   markFailed,
   markMaybeDelivered,
   resetCanceledNotification,
@@ -93,6 +92,7 @@ async function upsertRuntimeConfig(ctx: SchedulingCtx, options: RuntimeConfig) {
 }
 
 async function getEarliestPendingSegment(ctx: SchedulingCtx) {
+  const currentSegment = getSegment(Date.now());
   const [retryNotification, awaitingNotification] = await Promise.all([
     ctx.db
       .query("notifications")
@@ -110,12 +110,23 @@ async function getEarliestPendingSegment(ctx: SchedulingCtx) {
     return null;
   }
   if (!retryNotification) {
-    return awaitingNotification!.segment;
+    return typeof awaitingNotification!.segment === "number"
+      ? awaitingNotification!.segment
+      : currentSegment;
   }
   if (!awaitingNotification) {
-    return retryNotification.segment;
+    return typeof retryNotification.segment === "number"
+      ? retryNotification.segment
+      : currentSegment;
   }
-  return Math.min(retryNotification.segment, awaitingNotification.segment);
+  return Math.min(
+    typeof retryNotification.segment === "number"
+      ? retryNotification.segment
+      : currentSegment,
+    typeof awaitingNotification.segment === "number"
+      ? awaitingNotification.segment
+      : currentSegment,
+  );
 }
 
 async function syncNextBatchRun(
@@ -200,7 +211,6 @@ export const makeBatch = internalMutation({
   args: { reloop: v.boolean(), segment: v.number() },
   returns: v.null(),
   handler: async (ctx, args) => {
-    await backfillLegacyNotificationFields(ctx, BATCH_SIZE);
     const options = await getRuntimeConfig(ctx);
 
     const retryNotifications = await ctx.db

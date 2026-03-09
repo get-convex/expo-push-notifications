@@ -6,45 +6,12 @@ import {
 import type { Doc, Id } from "./_generated/dataModel.js";
 import { FINALIZED_EPOCH } from "./schema.js";
 import {
-  BASE_BATCH_DELAY,
   MESSAGE_RETRY_BACKOFF_BASE,
   MAX_MESSAGE_RETRY_DELAY_MS,
+  getSegment,
   getFutureSegment,
   type RuntimeConfig,
 } from "./shared.js";
-
-export async function backfillLegacyNotificationFields(
-  ctx: MutationCtx,
-  batchSize: number,
-) {
-  const candidates = [
-    ...(await ctx.db
-      .query("notifications")
-      .withIndex("state", (q) => q.eq("state", "awaiting_delivery"))
-      .take(batchSize)),
-    ...(await ctx.db
-      .query("notifications")
-      .withIndex("state", (q) => q.eq("state", "needs_retry"))
-      .take(batchSize)),
-  ];
-
-  for (const notification of candidates) {
-    const update: { segment?: number; finalizedAt?: number } = {};
-    const maybe = notification as Partial<Doc<"notifications">>;
-    if (typeof maybe.segment !== "number") {
-      update.segment = getFutureSegment(
-        notification._creationTime,
-        BASE_BATCH_DELAY,
-      );
-    }
-    if (typeof maybe.finalizedAt !== "number") {
-      update.finalizedAt = FINALIZED_EPOCH;
-    }
-    if (update.segment !== undefined || update.finalizedAt !== undefined) {
-      await ctx.db.patch(notification._id, update);
-    }
-  }
-}
 
 export const getNotificationsByIds = internalQuery({
   args: { notificationIds: v.array(v.id("notifications")) },
@@ -112,7 +79,9 @@ export async function scheduleRetry(
     numPreviousFailures,
     errorMessage: formatErrorMessage(errorMessage, errorCode),
     segment: exhausted
-      ? notification.segment
+      ? typeof notification.segment === "number"
+        ? notification.segment
+        : getSegment(Date.now())
       : getFutureSegment(Date.now(), retryDelayMs),
     finalizedAt: exhausted ? Date.now() : FINALIZED_EPOCH,
   });

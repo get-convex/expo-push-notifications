@@ -12,6 +12,7 @@ import type * as batch from "../batch.js";
 import type * as expo from "../expo.js";
 import type * as functions from "../functions.js";
 import type * as helpers from "../helpers.js";
+import type * as migrations from "../migrations.js";
 import type * as notifs from "../notifs.js";
 import type * as public_ from "../public.js";
 import type * as shared from "../shared.js";
@@ -28,6 +29,7 @@ const fullApi: ApiFromModules<{
   expo: typeof expo;
   functions: typeof functions;
   helpers: typeof helpers;
+  migrations: typeof migrations;
   notifs: typeof notifs;
   public: typeof public_;
   shared: typeof shared;
