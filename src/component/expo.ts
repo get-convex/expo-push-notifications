@@ -72,8 +72,7 @@ export const callExpoPushApiWithBatch = internalAction({
       reserve: true,
     });
     if (limit.retryAfter) {
-      const jitter = Math.random() * 100;
-      await sleep(limit.retryAfter + jitter);
+      await sleep(limit.retryAfter);
     }
 
     const response = await fetch("https://exp.host/--/api/v2/push/send", {
