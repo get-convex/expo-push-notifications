@@ -3,7 +3,7 @@ import type { Doc } from "./_generated/dataModel.js";
 import { DEFAULT_RUNTIME_CONFIG } from "./shared.js";
 import { cancelPendingBatches, scheduleBatchRun } from "./lib.js";
 
-export async function ensureCoordinator(ctx: MutationCtx) {
+export async function ensureBatchRunScheduled(ctx: MutationCtx) {
   await scheduleBatchRun(ctx, DEFAULT_RUNTIME_CONFIG);
 }
 

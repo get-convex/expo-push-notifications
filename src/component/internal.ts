@@ -2,7 +2,7 @@ import { v, type JSONValue } from "convex/values";
 import { internalAction, internalMutation } from "./functions.js";
 import { internal } from "./_generated/api.js";
 import type { Id } from "./_generated/dataModel.js";
-import { ensureCoordinator } from "./helpers.js";
+import { ensureBatchRunScheduled } from "./helpers.js";
 import { notificationFields } from "./schema.js";
 
 export const markNotificationState = internalMutation({
@@ -48,7 +48,7 @@ export const markNotificationState = internalMutation({
     }
     ctx.logger.debug(`Cancelling scheduled check ${checkJobId}`);
     await ctx.scheduler.cancel(checkJobId);
-    await ensureCoordinator(ctx);
+    await ensureBatchRunScheduled(ctx);
   },
 });
 
@@ -193,7 +193,7 @@ export const checkForFailedAction = internalMutation({
         state: "maybe_delivered",
       });
     }
-    await ensureCoordinator(ctx);
+    await ensureBatchRunScheduled(ctx);
   },
 });
 

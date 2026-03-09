@@ -5,7 +5,7 @@ import {
   notificationState,
   FINALIZED_EPOCH,
 } from "./schema.js";
-import { ensureCoordinator, shutdownGracefully } from "./helpers.js";
+import { ensureBatchRunScheduled, shutdownGracefully } from "./helpers.js";
 import { api } from "./_generated/api.js";
 
 const DEFAULT_LIMIT = 1000;
@@ -70,7 +70,7 @@ export const sendPushNotification = mutation({
   returns: v.union(v.id("notifications"), v.null()),
   handler: async (ctx, args) => {
     const result = await sendPushNotificationHandler(ctx, args);
-    await ensureCoordinator(ctx);
+    await ensureBatchRunScheduled(ctx);
     return result;
   },
 });
@@ -96,7 +96,7 @@ export const sendPushNotificationBatch = mutation({
       });
       results.push(result);
     }
-    await ensureCoordinator(ctx);
+    await ensureBatchRunScheduled(ctx);
     return results;
   },
 });
@@ -357,7 +357,7 @@ export const restart = mutation({
         state: "running",
       });
     }
-    await ensureCoordinator(ctx);
+    await ensureBatchRunScheduled(ctx);
     return true;
   },
 });

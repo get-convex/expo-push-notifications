@@ -22,13 +22,13 @@ When adding new functions to this Convex component:
 
    - Define args schema using `v.object()`
    - Export mutation/query with proper return type
-   - Call `ensureCoordinator(ctx)` after processing for coordination
+   - Call `ensureBatchRunScheduled(ctx)` after processing to kick the batch runner
 
 3. **Batch functions**:
 
    - Use existing handler functions (like `sendPushNotificationHandler`) in
      loops
-   - Call `ensureCoordinator` once after all processing
+   - Call `ensureBatchRunScheduled` once after all processing
    - Return array of results matching individual function return types
 
 4. **Always run codegen** after changes to regenerate types
