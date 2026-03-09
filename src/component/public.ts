@@ -303,10 +303,8 @@ export const shutdown = mutation({
     data: v.optional(v.any()),
   }),
   handler: async (ctx) => {
-    const { inProgressSenders, inProgressNotifications } =
-      await shutdownGracefully(ctx);
-    const inProgressCount =
-      inProgressSenders.length + inProgressNotifications.length;
+    const { inProgressNotifications } = await shutdownGracefully(ctx);
+    const inProgressCount = inProgressNotifications.length;
     if (inProgressCount === 0) {
       return { message: "success" };
     }
@@ -324,7 +322,6 @@ export const shutdown = mutation({
     return {
       message: `There are ${inProgressCount} notification jobs still draining. Wait a few seconds for them to finish and then restart the service.`,
       data: {
-        inProgressSenderIds: inProgressSenders.map((sender) => sender._id),
         inProgressNotificationIds: inProgressNotifications.map(
           (notification) => notification._id,
         ),
@@ -337,10 +334,8 @@ export const restart = mutation({
   args: {},
   returns: v.boolean(),
   handler: async (ctx) => {
-    const { inProgressSenders, inProgressNotifications } =
-      await shutdownGracefully(ctx);
-    const inProgressCount =
-      inProgressSenders.length + inProgressNotifications.length;
+    const { inProgressNotifications } = await shutdownGracefully(ctx);
+    const inProgressCount = inProgressNotifications.length;
     if (inProgressCount > 0) {
       ctx.logger.error(
         `There are ${inProgressCount} notification jobs still draining. Wait a few seconds for them to finish and try restarting again.`,

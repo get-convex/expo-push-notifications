@@ -39,14 +39,6 @@ export default defineSchema({
     token: v.string(),
     notificationsPaused: v.optional(v.boolean()),
   }).index("userId", ["userId"]),
-  // Legacy tables retained for compatibility with existing deployments.
-  senders: defineTable({
-    jobId: v.id("_scheduled_functions"),
-    checkJobId: v.id("_scheduled_functions"),
-  }),
-  senderCoordinator: defineTable({
-    jobId: v.id("_scheduled_functions"),
-  }),
   config: defineTable({
     state: v.union(v.literal("running"), v.literal("shutting_down")),
   }),

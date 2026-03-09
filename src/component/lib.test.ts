@@ -81,7 +81,7 @@ describe("push notification pipeline", () => {
     );
 
     const result = await t.action(
-      (internal as any).lib.callExpoPushApiWithBatch,
+      internal.lib.callExpoPushApiWithBatch,
       {
         notificationIds: [id1, id2],
       },
@@ -116,7 +116,7 @@ describe("push notification pipeline", () => {
     );
 
     const result = await t.action(
-      (internal as any).lib.callExpoPushApiWithBatch,
+      internal.lib.callExpoPushApiWithBatch,
       {
         notificationIds: [id],
       },
@@ -141,7 +141,7 @@ describe("push notification pipeline", () => {
       }),
     );
 
-    await t.mutation((internal as any).lib.onPushComplete, {
+    await t.mutation(internal.lib.onPushComplete, {
       workId: "work-1",
       context: {
         notificationIds: [id],

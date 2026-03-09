@@ -20,10 +20,10 @@ const BATCH_SIZE = 100;
 const EXPO_ONE_CALL_EVERY_MS = 200;
 const POOL_MAX_PARALLELISM = 8;
 
-const componentRefs = components as {
+const componentRefs: {
   pushNotificationWorkpool: WorkpoolComponentApi<"pushNotificationWorkpool">;
   rateLimiter: RateLimiterComponentApi<"rateLimiter">;
-};
+} = components;
 
 const notificationPool = new Workpool(
   componentRefs.pushNotificationWorkpool,
@@ -105,7 +105,7 @@ export async function scheduleBatchRun(
 
   const runId = await ctx.scheduler.runAfter(
     BASE_BATCH_DELAY,
-    (internal as any).lib.makeBatch,
+    internal.lib.makeBatch,
     {
       reloop: false,
       segment: getSegment(Date.now() + BASE_BATCH_DELAY),
@@ -141,7 +141,7 @@ async function reschedule(ctx: MutationCtx, notificationsLeft: boolean) {
 
   const runId = await ctx.scheduler.runAfter(
     BASE_BATCH_DELAY,
-    (internal as any).lib.makeBatch,
+    internal.lib.makeBatch,
     {
       reloop: false,
       segment: getSegment(Date.now() + BASE_BATCH_DELAY),
@@ -239,7 +239,7 @@ export const makeBatch = internalMutation({
 
     await notificationPool.enqueueAction(
       ctx,
-      (internal as any).lib.callExpoPushApiWithBatch,
+      internal.lib.callExpoPushApiWithBatch,
       { notificationIds },
       {
         retry: {
@@ -249,11 +249,11 @@ export const makeBatch = internalMutation({
         },
         runAfter: delay,
         context: { notificationIds },
-        onComplete: (internal as any).lib.onPushComplete,
+        onComplete: internal.lib.onPushComplete,
       },
     );
 
-    const runId = await ctx.scheduler.runAfter(0, (internal as any).lib.makeBatch, {
+    const runId = await ctx.scheduler.runAfter(0, internal.lib.makeBatch, {
       reloop: true,
       segment: args.segment,
     });
@@ -320,7 +320,7 @@ export const callExpoPushApiWithBatch = internalAction({
       metadata: any;
       state: string;
       numPreviousFailures: number;
-    }> = await ctx.runQuery((internal as any).lib.getNotificationsByIds, {
+    }> = await ctx.runQuery(internal.lib.getNotificationsByIds, {
       notificationIds: args.notificationIds,
     });
 

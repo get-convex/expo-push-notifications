@@ -10,8 +10,9 @@
 
 import type * as functions from "../functions.js";
 import type * as helpers from "../helpers.js";
-import type * as internal_ from "../internal.js";
+import type * as lib from "../lib.js";
 import type * as public_ from "../public.js";
+import type * as shared from "../shared.js";
 
 import type {
   ApiFromModules,
@@ -23,8 +24,9 @@ import { anyApi, componentsGeneric } from "convex/server";
 const fullApi: ApiFromModules<{
   functions: typeof functions;
   helpers: typeof helpers;
-  internal: typeof internal_;
+  lib: typeof lib;
   public: typeof public_;
+  shared: typeof shared;
 }> = anyApi as any;
 
 /**
@@ -53,4 +55,7 @@ export const internal: FilterApi<
   FunctionReference<any, "internal">
 > = anyApi as any;
 
-export const components = componentsGeneric() as unknown as {};
+export const components = componentsGeneric() as unknown as {
+  rateLimiter: import("@convex-dev/rate-limiter/_generated/component.js").ComponentApi<"rateLimiter">;
+  pushNotificationWorkpool: import("@convex-dev/workpool/_generated/component.js").ComponentApi<"pushNotificationWorkpool">;
+};
