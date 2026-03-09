@@ -5,20 +5,13 @@ import {
 } from "./_generated/server.js";
 import type { Doc, Id } from "./_generated/dataModel.js";
 import { FINALIZED_EPOCH } from "./schema.js";
-import type { RuntimeConfig } from "./shared.js";
-
-export const SEGMENT_MS = 125;
-export const BASE_BATCH_DELAY = 250;
-const MESSAGE_RETRY_BACKOFF_BASE = 2;
-const MAX_MESSAGE_RETRY_DELAY_MS = 15 * 60 * 1000;
-
-export function getSegment(now: number) {
-  return Math.floor(now / SEGMENT_MS);
-}
-
-export function getFutureSegment(now: number, delayMs: number) {
-  return Math.floor((now + delayMs + SEGMENT_MS - 1) / SEGMENT_MS);
-}
+import {
+  BASE_BATCH_DELAY,
+  MESSAGE_RETRY_BACKOFF_BASE,
+  MAX_MESSAGE_RETRY_DELAY_MS,
+  getFutureSegment,
+  type RuntimeConfig,
+} from "./shared.js";
 
 export async function backfillLegacyNotificationFields(
   ctx: MutationCtx,

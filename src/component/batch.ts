@@ -9,21 +9,23 @@ import {
   type MutationCtx,
 } from "./_generated/server.js";
 import type { Doc, Id } from "./_generated/dataModel.js";
-import { DEFAULT_RUNTIME_CONFIG, type RuntimeConfig } from "./shared.js";
 import {
+  BATCH_SIZE,
   BASE_BATCH_DELAY,
-  SEGMENT_MS,
-  backfillLegacyNotificationFields,
+  DEFAULT_RUNTIME_CONFIG,
+  EXPO_ONE_CALL_EVERY_MS,
+  getDelayUntilSegment,
   getFutureSegment,
   getSegment,
+  type RuntimeConfig,
+} from "./shared.js";
+import {
+  backfillLegacyNotificationFields,
   markFailed,
   markMaybeDelivered,
   resetCanceledNotification,
   scheduleRetry,
 } from "./notifs.js";
-
-const BATCH_SIZE = 100;
-const EXPO_ONE_CALL_EVERY_MS = 200;
 const POOL_MAX_PARALLELISM = 8;
 
 const componentRefs: {
@@ -50,10 +52,6 @@ type SchedulingCtx = {
   db: MutationCtx["db"];
   scheduler: MutationCtx["scheduler"];
 };
-
-function getDelayUntilSegment(now: number, segment: number) {
-  return Math.max(0, segment * SEGMENT_MS - now);
-}
 
 async function upsertNextBatchRun(
   ctx: SchedulingCtx,

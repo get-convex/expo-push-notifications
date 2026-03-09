@@ -169,6 +169,25 @@ export const vRuntimeConfig = v.object({
 });
 export type RuntimeConfig = Infer<typeof vRuntimeConfig>;
 
+export const SEGMENT_MS = 125;
+export const BASE_BATCH_DELAY = 250;
+export const BATCH_SIZE = 100;
+export const EXPO_ONE_CALL_EVERY_MS = 200;
+export const MESSAGE_RETRY_BACKOFF_BASE = 2;
+export const MAX_MESSAGE_RETRY_DELAY_MS = 15 * 60 * 1000;
+
+export function getSegment(now: number) {
+  return Math.floor(now / SEGMENT_MS);
+}
+
+export function getFutureSegment(now: number, delayMs: number) {
+  return Math.floor((now + delayMs + SEGMENT_MS - 1) / SEGMENT_MS);
+}
+
+export function getDelayUntilSegment(now: number, segment: number) {
+  return Math.max(0, segment * SEGMENT_MS - now);
+}
+
 export const DEFAULT_RUNTIME_CONFIG: RuntimeConfig = {
   initialBackoffMs: 500,
   retryAttempts: 5,

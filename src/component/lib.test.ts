@@ -2,7 +2,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { api, internal } from "./_generated/api.js";
 import { setupTest, type Tester } from "./setup.test.js";
 import { FINALIZED_EPOCH } from "./schema.js";
-import { BASE_BATCH_DELAY, SEGMENT_MS } from "./notifs.js";
+import { BASE_BATCH_DELAY, SEGMENT_MS } from "./shared.js";
 
 describe("push notification pipeline", () => {
   let t: Tester;

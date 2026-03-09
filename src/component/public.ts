@@ -1,13 +1,16 @@
 import { ConvexError, v, type Infer } from "convex/values";
 import { mutation, query, type MutationCtx } from "./functions.js";
 import {
+  BASE_BATCH_DELAY,
+  getFutureSegment,
+} from "./shared.js";
+import {
   notificationFields,
   notificationState,
   FINALIZED_EPOCH,
 } from "./schema.js";
 import { ensureBatchRunScheduled, shutdownGracefully } from "./helpers.js";
 import { api } from "./_generated/api.js";
-import { BASE_BATCH_DELAY, getFutureSegment } from "./notifs.js";
 
 const DEFAULT_LIMIT = 1000;
 
