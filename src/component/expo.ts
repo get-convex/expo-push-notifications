@@ -41,6 +41,7 @@ const expoApiRateLimiter = new RateLimiter(componentRefs.rateLimiter, {
     rate: 1,
   },
 });
+const EXPO_REQUEST_TIMEOUT_MS = 30_000;
 
 function sleep(ms: number) {
   return new Promise((resolve) => setTimeout(resolve, ms));
@@ -75,20 +76,38 @@ export const callExpoPushApiWithBatch = internalAction({
       await sleep(limit.retryAfter);
     }
 
-    const response = await fetch("https://exp.host/--/api/v2/push/send", {
-      method: "POST",
-      headers: {
-        Accept: "application/json",
-        "Accept-encoding": "gzip, deflate",
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify(
-        inProgress.map((notification) => ({
-          to: notification.token,
-          ...notification.metadata,
-        })),
-      ),
-    });
+    const controller = new AbortController();
+    const timeout = setTimeout(() => {
+      controller.abort();
+    }, EXPO_REQUEST_TIMEOUT_MS);
+
+    let response: Response;
+    try {
+      response = await fetch("https://exp.host/--/api/v2/push/send", {
+        method: "POST",
+        headers: {
+          Accept: "application/json",
+          "Accept-encoding": "gzip, deflate",
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(
+          inProgress.map((notification) => ({
+            to: notification.token,
+            ...notification.metadata,
+          })),
+        ),
+        signal: controller.signal,
+      });
+    } catch (error) {
+      if (error instanceof Error && error.name === "AbortError") {
+        throw new Error(
+          `Expo API request timed out after ${EXPO_REQUEST_TIMEOUT_MS}ms`,
+        );
+      }
+      throw error;
+    } finally {
+      clearTimeout(timeout);
+    }
 
     if (!response.ok) {
       throw new Error(
@@ -111,6 +130,11 @@ export const callExpoPushApiWithBatch = internalAction({
 
     if (!responseBody?.data || !Array.isArray(responseBody.data)) {
       throw new Error("Invalid response from Expo API");
+    }
+    if (responseBody.data.length !== inProgress.length) {
+      throw new Error(
+        `Invalid response from Expo API: expected ${inProgress.length} results, got ${responseBody.data.length}`,
+      );
     }
 
     return {

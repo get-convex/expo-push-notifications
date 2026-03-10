@@ -127,6 +127,7 @@ export async function markNotificationsInProgress(
   for (const notification of notifications) {
     await ctx.db.patch(notification._id, {
       state: "in_progress",
+      errorMessage: undefined,
     });
   }
 }
@@ -209,6 +210,7 @@ export async function markDelivered(
   await ctx.db.patch(notificationId, {
     state: "delivered",
     expoTicketId,
+    errorMessage: undefined,
     finalizedAt: Date.now(),
   });
 }
@@ -224,6 +226,7 @@ export async function resetCanceledNotification(
 
   await ctx.db.patch(notificationId, {
     state: "awaiting_delivery",
+    errorMessage: undefined,
     finalizedAt: FINALIZED_EPOCH,
   });
 }

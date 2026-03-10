@@ -184,6 +184,86 @@ describe("push notification pipeline", () => {
     ).rejects.toThrow("Expo API error: 503 Svc oops");
   });
 
+  it("aborts a hung Expo request after the timeout", async () => {
+    const id = await t.run(async (ctx: any) =>
+      ctx.db.insert("notifications", {
+        token: "ExponentPushToken[one]",
+        metadata: { title: "one" },
+        state: "in_progress",
+        numPreviousFailures: 0,
+        segment: 1,
+        finalizedAt: FINALIZED_EPOCH,
+      }),
+    );
+
+    vi.stubGlobal(
+      "fetch",
+      vi.fn((_url, init) => {
+        const signal = (init as RequestInit | undefined)?.signal;
+        return new Promise<Response>((_resolve, reject) => {
+          signal?.addEventListener("abort", () => {
+            reject(new DOMException("Aborted", "AbortError"));
+          });
+        });
+      }),
+    );
+
+    const action = t.action(internal.expo.callExpoPushApiWithBatch, {
+      notificationIds: [id],
+      logLevel: "ERROR",
+    });
+    const expectation = expect(action).rejects.toThrow(
+      "Expo API request timed out after 30000ms",
+    );
+
+    await vi.advanceTimersByTimeAsync(30_000);
+
+    await expectation;
+  });
+
+  it("throws when Expo returns the wrong number of result items", async () => {
+    const id1 = await t.run(async (ctx: any) =>
+      ctx.db.insert("notifications", {
+        token: "ExponentPushToken[one]",
+        metadata: { title: "one" },
+        state: "in_progress",
+        numPreviousFailures: 0,
+        segment: 1,
+        finalizedAt: FINALIZED_EPOCH,
+      }),
+    );
+    const id2 = await t.run(async (ctx: any) =>
+      ctx.db.insert("notifications", {
+        token: "ExponentPushToken[two]",
+        metadata: { title: "two" },
+        state: "in_progress",
+        numPreviousFailures: 0,
+        segment: 1,
+        finalizedAt: FINALIZED_EPOCH,
+      }),
+    );
+
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(
+        async () =>
+          new Response(
+            JSON.stringify({
+              data: [{ status: "ok", id: "ticket-1" }],
+            }),
+            { status: 200 },
+          ),
+      ),
+    );
+
+    await expect(
+      t.action(internal.expo.callExpoPushApiWithBatch, {
+        notificationIds: [id1, id2],
+        logLevel: "ERROR",
+      }),
+    ).rejects.toThrow("Invalid response from Expo API: expected 2 results, got 1");
+  });
+
   it("returns canceled batches to awaiting_delivery", async () => {
     const id = await t.run(async (ctx: any) =>
       ctx.db.insert("notifications", {
@@ -193,6 +273,7 @@ describe("push notification pipeline", () => {
         numPreviousFailures: 0,
         segment: 1,
         finalizedAt: FINALIZED_EPOCH,
+        errorMessage: "previous failure",
       }),
     );
 
@@ -206,7 +287,41 @@ describe("push notification pipeline", () => {
 
     const notification = await t.run(async (ctx: any) => ctx.db.get(id));
     expect(notification?.state).toBe("awaiting_delivery");
+    expect(notification?.errorMessage).toBeUndefined();
     expect(notification?.finalizedAt).toBe(FINALIZED_EPOCH);
+  });
+
+  it("clears stale errors when a notification is delivered", async () => {
+    const id = await t.run(async (ctx: any) =>
+      ctx.db.insert("notifications", {
+        token: "ExponentPushToken[one]",
+        metadata: { title: "one" },
+        state: "in_progress",
+        numPreviousFailures: 1,
+        segment: 1,
+        finalizedAt: FINALIZED_EPOCH,
+        errorMessage: "previous failure",
+      }),
+    );
+
+    await t.mutation(internal.batch.onPushComplete, {
+      workId: "work-1",
+      context: {
+        notificationIds: [id],
+      },
+      result: {
+        kind: "success",
+        returnValue: {
+          kind: "success",
+          notifications: [{ id, state: "delivered", expoTicketId: "ticket-1" }],
+        },
+      },
+    });
+
+    const notification = await t.run(async (ctx: any) => ctx.db.get(id));
+    expect(notification?.state).toBe("delivered");
+    expect(notification?.expoTicketId).toBe("ticket-1");
+    expect(notification?.errorMessage).toBeUndefined();
   });
 
   it("reschedules a deferred partial reloop after the current run", async () => {
@@ -246,6 +361,29 @@ describe("push notification pipeline", () => {
     });
 
     expect(nextBatchRun?.segment).toBe(futureSegment);
+  });
+
+  it("does not enqueue work when a queued batch runs during shutdown", async () => {
+    const id = await t.run(async (ctx: any) => {
+      await ctx.db.insert("config", { state: "shutting_down" });
+      return await ctx.db.insert("notifications", {
+        token: "ExponentPushToken[one]",
+        metadata: { title: "one" },
+        state: "awaiting_delivery",
+        numPreviousFailures: 0,
+        segment: 1,
+        finalizedAt: FINALIZED_EPOCH,
+      });
+    });
+
+    await t.mutation(internal.batch.makeBatch, {
+      reloop: false,
+      segment: 1,
+      logLevel: "ERROR",
+    });
+
+    const notification = await t.run(async (ctx: any) => ctx.db.get(id));
+    expect(notification?.state).toBe("awaiting_delivery");
   });
 
   it("marks exhausted whole-batch failures as maybe_delivered", async () => {

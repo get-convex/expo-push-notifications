@@ -86,6 +86,11 @@ async function upsertRuntimeConfig(ctx: SchedulingCtx, options: RuntimeConfig) {
   }
 }
 
+async function isShuttingDown(ctx: SchedulingCtx) {
+  const config = await ctx.db.query("config").unique();
+  return config?.state === "shutting_down";
+}
+
 async function getEarliestPendingSegment(ctx: SchedulingCtx) {
   return await getEarliestPendingNotificationSegment(ctx, getSegment(Date.now()));
 }
@@ -155,8 +160,7 @@ export async function scheduleBatchRun(
 ) {
   await upsertRuntimeConfig(ctx, options);
 
-  const config = await ctx.db.query("config").unique();
-  if (config?.state === "shutting_down") {
+  if (await isShuttingDown(ctx)) {
     return;
   }
 
@@ -177,6 +181,9 @@ export const makeBatch = internalMutation({
   returns: v.null(),
   handler: async (ctx, args) => {
     const options = await getRuntimeConfig(ctx);
+    if (await isShuttingDown(ctx)) {
+      return null;
+    }
 
     // Pull the notifications that are eligible for this scheduler segment,
     // prioritizing retries ahead of brand new deliveries.
