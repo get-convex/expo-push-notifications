@@ -1,7 +1,15 @@
 import { ConvexError, v, type Infer } from "convex/values";
 import { mutation, query, type MutationCtx } from "./functions.js";
-import { notificationFields, notificationState } from "./schema.js";
-import { ensureCoordinator, shutdownGracefully } from "./helpers.js";
+import {
+  BASE_BATCH_DELAY,
+  getFutureSegment,
+} from "./shared.js";
+import {
+  notificationFields,
+  notificationState,
+  FINALIZED_EPOCH,
+} from "./schema.js";
+import { ensureBatchRunScheduled, shutdownGracefully } from "./helpers.js";
 import { api } from "./_generated/api.js";
 
 const DEFAULT_LIMIT = 1000;
@@ -61,7 +69,7 @@ export const sendPushNotification = mutation({
   returns: v.union(v.id("notifications"), v.null()),
   handler: async (ctx, args) => {
     const result = await sendPushNotificationHandler(ctx, args);
-    await ensureCoordinator(ctx);
+    await ensureBatchRunScheduled(ctx);
     return result;
   },
 });
@@ -87,7 +95,7 @@ export const sendPushNotificationBatch = mutation({
       });
       results.push(result);
     }
-    await ensureCoordinator(ctx);
+    await ensureBatchRunScheduled(ctx);
     return results;
   },
 });
@@ -125,6 +133,8 @@ async function sendPushNotificationHandler(
     metadata: args.notification,
     state: "awaiting_delivery",
     numPreviousFailures: 0,
+    segment: getFutureSegment(Date.now(), BASE_BATCH_DELAY),
+    finalizedAt: FINALIZED_EPOCH,
   });
   ctx.logger.debug(`Recording notification for user ${args.userId}`);
   return id;
@@ -292,8 +302,9 @@ export const shutdown = mutation({
     data: v.optional(v.any()),
   }),
   handler: async (ctx) => {
-    const { inProgressSenders } = await shutdownGracefully(ctx);
-    if (inProgressSenders.length === 0) {
+    const { inProgressNotifications } = await shutdownGracefully(ctx);
+    const inProgressCount = inProgressNotifications.length;
+    if (inProgressCount === 0) {
       return { message: "success" };
     }
     const config = await ctx.db.query("config").unique();
@@ -308,9 +319,11 @@ export const shutdown = mutation({
       });
     }
     return {
-      message: `There are ${inProgressSenders.length} jobs currently sending notifications that will continue running. Wait a few seconds for them to finish and then restart the service.`,
+      message: `There are ${inProgressCount} notification jobs still draining. Wait a few seconds for them to finish and then restart the service.`,
       data: {
-        inProgressSenderIds: inProgressSenders.map((sender) => sender._id),
+        inProgressNotificationIds: inProgressNotifications.map(
+          (notification) => notification._id,
+        ),
       },
     };
   },
@@ -320,10 +333,11 @@ export const restart = mutation({
   args: {},
   returns: v.boolean(),
   handler: async (ctx) => {
-    const { inProgressSenders } = await shutdownGracefully(ctx);
-    if (inProgressSenders.length > 0) {
+    const { inProgressNotifications } = await shutdownGracefully(ctx);
+    const inProgressCount = inProgressNotifications.length;
+    if (inProgressCount > 0) {
       ctx.logger.error(
-        `There are ${inProgressSenders.length} jobs currently sending notifications. Wait a few seconds for them to finish and try to restart again.`,
+        `There are ${inProgressCount} notification jobs still draining. Wait a few seconds for them to finish and try restarting again.`,
       );
       return false;
     }
@@ -337,7 +351,7 @@ export const restart = mutation({
         state: "running",
       });
     }
-    await ensureCoordinator(ctx);
+    await ensureBatchRunScheduled(ctx);
     return true;
   },
 });

@@ -13,6 +13,6 @@ export function register(
   t: TestConvex<SchemaDefinition<GenericSchema, boolean>>,
   name: string = "pushNotifications",
 ) {
-  t.registerComponent(name, schema, modules);
+  t.registerComponent(name, schema as any, modules as any);
 }
 export default { register, schema, modules };

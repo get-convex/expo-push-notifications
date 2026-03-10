@@ -8,10 +8,14 @@
  * @module
  */
 
+import type * as batch from "../batch.js";
+import type * as expo from "../expo.js";
 import type * as functions from "../functions.js";
 import type * as helpers from "../helpers.js";
-import type * as internal_ from "../internal.js";
+import type * as migrations from "../migrations.js";
+import type * as notifs from "../notifs.js";
 import type * as public_ from "../public.js";
+import type * as shared from "../shared.js";
 
 import type {
   ApiFromModules,
@@ -21,10 +25,14 @@ import type {
 import { anyApi, componentsGeneric } from "convex/server";
 
 const fullApi: ApiFromModules<{
+  batch: typeof batch;
+  expo: typeof expo;
   functions: typeof functions;
   helpers: typeof helpers;
-  internal: typeof internal_;
+  migrations: typeof migrations;
+  notifs: typeof notifs;
   public: typeof public_;
+  shared: typeof shared;
 }> = anyApi as any;
 
 /**
@@ -53,4 +61,7 @@ export const internal: FilterApi<
   FunctionReference<any, "internal">
 > = anyApi as any;
 
-export const components = componentsGeneric() as unknown as {};
+export const components = componentsGeneric() as unknown as {
+  rateLimiter: import("@convex-dev/rate-limiter/_generated/component.js").ComponentApi<"rateLimiter">;
+  pushNotificationWorkpool: import("@convex-dev/workpool/_generated/component.js").ComponentApi<"pushNotificationWorkpool">;
+};
