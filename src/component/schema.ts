@@ -26,8 +26,11 @@ export default defineSchema({
     metadata: v.object(notificationFields),
     state: vNotificationStatus,
     numPreviousFailures: v.number(),
-    segment: v.number(),
-    finalizedAt: v.number(),
+    // Kept optional for rollout compatibility with pre-modernization rows.
+    // Runtime logic treats missing `segment` as immediately eligible.
+    segment: v.optional(v.number()),
+    // Reserved for future GC; old rows may legitimately not have it yet.
+    finalizedAt: v.optional(v.number()),
     expoTicketId: v.optional(v.string()),
     errorMessage: v.optional(v.string()),
   })
