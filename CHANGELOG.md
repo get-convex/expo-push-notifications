@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.4.0-beta.0
+
+Switch to workpool + rate limiter instead of custom runner.
+
 ## 0.3.1
 
 - Fixes handling of non-ok expo response (credit: sanches89)
