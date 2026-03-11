@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.4.1-beta.0
+
+Exclude test files from build.
+
 ## 0.4.0-beta.0
 
 Switch to workpool + rate limiter instead of custom runner.
