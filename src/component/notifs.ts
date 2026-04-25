@@ -24,7 +24,7 @@ export const getNotificationsByIds = internalQuery({
   ),
   handler: async (ctx, args) => {
     const notifications = await Promise.all(
-      args.notificationIds.map((id) => ctx.db.get(id)),
+      args.notificationIds.map((id) => ctx.db.get("notifications", id)),
     );
     return notifications
       .filter((n): n is Doc<"notifications"> => n !== null)
@@ -108,7 +108,7 @@ export async function finalizeExhaustedAndReturnDeliverableNotifications(
 
   for (const notification of notifications) {
     if (notification.numPreviousFailures >= retryAttempts) {
-      await ctx.db.patch(notification._id, {
+      await ctx.db.patch("notifications", notification._id, {
         state: "unable_to_deliver",
         finalizedAt: Date.now(),
       });
@@ -125,7 +125,7 @@ export async function markNotificationsInProgress(
   notifications: Doc<"notifications">[],
 ) {
   for (const notification of notifications) {
-    await ctx.db.patch(notification._id, {
+    await ctx.db.patch("notifications", notification._id, {
       state: "in_progress",
       errorMessage: undefined,
     });
@@ -145,7 +145,7 @@ export async function scheduleRetry(
   errorMessage?: string,
   errorCode?: string,
 ) {
-  const notification = await ctx.db.get(notificationId);
+  const notification = await ctx.db.get("notifications", notificationId);
   if (!notification) {
     return;
   }
@@ -166,7 +166,7 @@ export async function scheduleRetry(
       MESSAGE_RETRY_BACKOFF_BASE ** (numPreviousFailures - 1),
   );
 
-  await ctx.db.patch(notificationId, {
+  await ctx.db.patch("notifications", notificationId, {
     state: exhausted ? "unable_to_deliver" : "needs_retry",
     numPreviousFailures,
     errorMessage: formatErrorMessage(errorMessage, errorCode),
@@ -185,12 +185,12 @@ export async function markFailed(
   errorMessage?: string,
   errorCode?: string,
 ) {
-  const notification = await ctx.db.get(notificationId);
+  const notification = await ctx.db.get("notifications", notificationId);
   if (!notification || notification.state !== "in_progress") {
     return;
   }
 
-  await ctx.db.patch(notificationId, {
+  await ctx.db.patch("notifications", notificationId, {
     state: "failed",
     errorMessage: formatErrorMessage(errorMessage, errorCode),
     finalizedAt: Date.now(),
@@ -202,12 +202,12 @@ export async function markDelivered(
   notificationId: Id<"notifications">,
   expoTicketId?: string,
 ) {
-  const notification = await ctx.db.get(notificationId);
+  const notification = await ctx.db.get("notifications", notificationId);
   if (!notification || notification.state !== "in_progress") {
     return;
   }
 
-  await ctx.db.patch(notificationId, {
+  await ctx.db.patch("notifications", notificationId, {
     state: "delivered",
     expoTicketId,
     errorMessage: undefined,
@@ -219,12 +219,12 @@ export async function resetCanceledNotification(
   ctx: MutationCtx,
   notificationId: Id<"notifications">,
 ) {
-  const notification = await ctx.db.get(notificationId);
+  const notification = await ctx.db.get("notifications", notificationId);
   if (!notification || notification.state !== "in_progress") {
     return;
   }
 
-  await ctx.db.patch(notificationId, {
+  await ctx.db.patch("notifications", notificationId, {
     state: "awaiting_delivery",
     errorMessage: undefined,
     finalizedAt: FINALIZED_EPOCH,
@@ -236,12 +236,12 @@ export async function markMaybeDelivered(
   notificationId: Id<"notifications">,
   errorMessage: string,
 ) {
-  const notification = await ctx.db.get(notificationId);
+  const notification = await ctx.db.get("notifications", notificationId);
   if (!notification || notification.state !== "in_progress") {
     return;
   }
 
-  await ctx.db.patch(notificationId, {
+  await ctx.db.patch("notifications", notificationId, {
     state: "maybe_delivered",
     errorMessage,
     finalizedAt: Date.now(),

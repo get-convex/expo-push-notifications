@@ -24,7 +24,7 @@ export const resetLegacyInProgressNotifications = internalMutation({
     );
 
     for (const notification of legacyNotifications) {
-      await ctx.db.patch(notification._id, {
+      await ctx.db.patch("notifications", notification._id, {
         state: "awaiting_delivery",
         finalizedAt: FINALIZED_EPOCH,
       });

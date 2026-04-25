@@ -33,7 +33,7 @@ export const recordPushNotificationToken = mutation({
       ctx.logger.debug(
         `Push token already exists for user ${userId}, updating token`,
       );
-      await ctx.db.patch(existingToken._id, { token: pushToken });
+      await ctx.db.patch("pushTokens", existingToken._id, { token: pushToken });
       return;
     }
     await ctx.db.insert("pushTokens", { userId, token: pushToken });
@@ -54,7 +54,7 @@ export const removePushNotificationToken = mutation({
       ctx.logger.debug(`No push token found for user ${userId}, doing nothing`);
       return;
     }
-    await ctx.db.delete(existingToken._id);
+    await ctx.db.delete("pushTokens", existingToken._id);
   },
 });
 
@@ -152,7 +152,7 @@ export const getNotification = query({
     }),
   ),
   handler: async (ctx, args) => {
-    const notification = await ctx.db.get(args.id);
+    const notification = await ctx.db.get("notifications", args.id);
     if (!notification) {
       return null;
     }
@@ -215,7 +215,7 @@ export const deleteNotificationsForUser = mutation({
       .withIndex("token", (q) => q.eq("token", token.token))
       .take(DEFAULT_LIMIT);
     for (const notification of notifications) {
-      await ctx.db.delete(notification._id);
+      await ctx.db.delete("notifications", notification._id);
     }
     if (notifications.length > 0) {
       ctx.logger.info(
@@ -249,7 +249,7 @@ export const pauseNotificationsForUser = mutation({
       return;
     }
     ctx.logger.info(`Pausing notifications for user ${userId}`);
-    await ctx.db.patch(existingToken._id, {
+    await ctx.db.patch("pushTokens", existingToken._id, {
       notificationsPaused: true,
     });
   },
@@ -268,7 +268,7 @@ export const unpauseNotificationsForUser = mutation({
       return;
     }
     ctx.logger.info(`Unpausing notifications for user ${userId}`);
-    await ctx.db.patch(existingToken._id, {
+    await ctx.db.patch("pushTokens", existingToken._id, {
       notificationsPaused: false,
     });
   },
@@ -314,7 +314,7 @@ export const shutdown = mutation({
         state: "shutting_down",
       });
     } else {
-      await ctx.db.patch(config._id, {
+      await ctx.db.patch("config", config._id, {
         state: "shutting_down",
       });
     }
@@ -343,7 +343,7 @@ export const restart = mutation({
     }
     const config = await ctx.db.query("config").unique();
     if (config !== null) {
-      await ctx.db.patch(config._id, {
+      await ctx.db.patch("config", config._id, {
         state: "running",
       });
     } else {

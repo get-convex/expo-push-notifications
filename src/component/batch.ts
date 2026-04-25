@@ -54,7 +54,7 @@ async function upsertNextBatchRun(
 ) {
   const existing = await ctx.db.query("nextBatchRun").unique();
   if (existing) {
-    await ctx.db.patch(existing._id, { runId, segment });
+    await ctx.db.patch("nextBatchRun", existing._id, { runId, segment });
     return;
   }
   await ctx.db.insert("nextBatchRun", { runId, segment });
@@ -82,7 +82,7 @@ async function upsertRuntimeConfig(ctx: SchedulingCtx, options: RuntimeConfig) {
     lastOptions.initialBackoffMs !== options.initialBackoffMs ||
     lastOptions.retryAttempts !== options.retryAttempts
   ) {
-    await ctx.db.patch(lastOptions._id, options);
+    await ctx.db.patch("lastOptions", lastOptions._id, options);
   }
 }
 
@@ -115,7 +115,7 @@ async function syncNextBatchRun(
       ) {
         await ctx.scheduler.cancel(existing.runId);
       }
-      await ctx.db.delete(existing._id);
+      await ctx.db.delete("nextBatchRun", existing._id);
     }
     return;
   }
@@ -131,11 +131,11 @@ async function syncNextBatchRun(
     if (existing.segment > currentSegment) {
       await ctx.scheduler.cancel(existing.runId);
     }
-    await ctx.db.delete(existing._id);
+    await ctx.db.delete("nextBatchRun", existing._id);
   } else if (existing) {
     // Defensive cleanup for older rows that predate the `segment` field.
     await ctx.scheduler.cancel(existing.runId);
-    await ctx.db.delete(existing._id);
+    await ctx.db.delete("nextBatchRun", existing._id);
   }
 
   // Record the next wake-up that advances the batcher state machine back into
