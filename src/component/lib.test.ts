@@ -39,7 +39,7 @@ describe("push notification pipeline", () => {
     expect(notificationId).not.toBeNull();
 
     const notification = await t.run(async (ctx: any) => {
-      return await ctx.db.get(notificationId!);
+      return await ctx.db.get("notifications", notificationId!);
     });
 
     expect(notification).not.toBeNull();
@@ -285,7 +285,7 @@ describe("push notification pipeline", () => {
       result: { kind: "canceled" },
     });
 
-    const notification = await t.run(async (ctx: any) => ctx.db.get(id));
+    const notification = await t.run(async (ctx: any) => ctx.db.get("notifications", id));
     expect(notification?.state).toBe("awaiting_delivery");
     expect(notification?.errorMessage).toBeUndefined();
     expect(notification?.finalizedAt).toBe(FINALIZED_EPOCH);
@@ -318,7 +318,7 @@ describe("push notification pipeline", () => {
       },
     });
 
-    const notification = await t.run(async (ctx: any) => ctx.db.get(id));
+    const notification = await t.run(async (ctx: any) => ctx.db.get("notifications", id));
     expect(notification?.state).toBe("delivered");
     expect(notification?.expoTicketId).toBe("ticket-1");
     expect(notification?.errorMessage).toBeUndefined();
@@ -382,7 +382,7 @@ describe("push notification pipeline", () => {
       logLevel: "ERROR",
     });
 
-    const notification = await t.run(async (ctx: any) => ctx.db.get(id));
+    const notification = await t.run(async (ctx: any) => ctx.db.get("notifications", id));
     expect(notification?.state).toBe("awaiting_delivery");
   });
 
@@ -406,7 +406,7 @@ describe("push notification pipeline", () => {
       result: { kind: "failed", error: "Expo API error: 503 Svc oops" },
     });
 
-    const notification = await t.run(async (ctx: any) => ctx.db.get(id));
+    const notification = await t.run(async (ctx: any) => ctx.db.get("notifications", id));
     expect(notification?.state).toBe("maybe_delivered");
     expect(notification?.errorMessage).toBe("Expo API error: 503 Svc oops");
   });
@@ -446,7 +446,7 @@ describe("push notification pipeline", () => {
         },
       },
     });
-    const notification = await t.run(async (ctx: any) => ctx.db.get(id));
+    const notification = await t.run(async (ctx: any) => ctx.db.get("notifications", id));
     expect(notification?.state).toBe("needs_retry");
     expect(notification?.numPreviousFailures).toBe(1);
     expect(notification?.finalizedAt).toBe(FINALIZED_EPOCH);
@@ -485,7 +485,7 @@ describe("push notification pipeline", () => {
       },
     });
 
-    const notification = await t.run(async (ctx: any) => ctx.db.get(id));
+    const notification = await t.run(async (ctx: any) => ctx.db.get("notifications", id));
     expect(notification?.state).toBe("failed");
     expect(notification?.errorMessage).toBe("invalid token");
     expect(notification?.finalizedAt).not.toBe(FINALIZED_EPOCH);

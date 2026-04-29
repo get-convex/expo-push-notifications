@@ -10,7 +10,7 @@ export const shutdownGracefully = async (ctx: MutationCtx) => {
   const nextBatchRun = await ctx.db.query("nextBatchRun").unique();
   if (nextBatchRun) {
     await ctx.scheduler.cancel(nextBatchRun.runId);
-    await ctx.db.delete(nextBatchRun._id);
+    await ctx.db.delete("nextBatchRun", nextBatchRun._id);
   }
   await cancelPendingBatches(ctx);
   const inProgressNotifications = await ctx.db
