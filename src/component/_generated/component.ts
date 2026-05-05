@@ -133,6 +133,17 @@ export type ComponentApi<Name extends string | undefined = string | undefined> =
         null,
         Name
       >;
+      recordPushNotificationTokenBatch: FunctionReference<
+        "mutation",
+        "internal",
+        {
+          logLevel: "DEBUG" | "INFO" | "WARN" | "ERROR";
+          tokens: Array<{ pushToken: string; userId: string }>;
+          upsert?: boolean;
+        },
+        null,
+        Name
+      >;
       removePushNotificationToken: FunctionReference<
         "mutation",
         "internal",

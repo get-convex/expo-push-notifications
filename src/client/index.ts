@@ -8,6 +8,8 @@ import type { NotificationFields } from "../component/schema.js";
 import type { LogLevel } from "../logging/index.js";
 import type { ComponentApi } from "../component/_generated/component.js";
 
+const RECORD_TOKEN_BATCH_SIZE = 4000;
+
 /**
  * This component uses Expo's push notification API
  * (https://docs.expo.dev/push-notifications/overview/)
@@ -48,6 +50,40 @@ export class PushNotifications<UserType extends string = GenericId<"users">> {
       ...args,
       logLevel: this.config.logLevel,
     });
+  }
+
+  /**
+   * Records push notification tokens for many users at once.
+   *
+   * The list is broken into batches of {@link RECORD_TOKEN_BATCH_SIZE} users
+   * and each batch is sent in its own mutation. Call this from an action so
+   * each batch lands in its own transaction; calling from a mutation will
+   * still process every batch in a single transaction.
+   *
+   * @param args.tokens List of `{ userId, pushToken }` pairs to record.
+   * @param args.upsert If true, overwrite the token for users that already
+   * have one (matching {@link recordToken}'s behavior). If false or omitted,
+   * existing tokens are left alone and only new users get a token recorded.
+   */
+  async recordTokenBatch(
+    ctx: RunMutationCtx,
+    args: {
+      tokens: Array<{ userId: UserType; pushToken: string }>;
+      upsert?: boolean;
+    },
+  ): Promise<null> {
+    for (let i = 0; i < args.tokens.length; i += RECORD_TOKEN_BATCH_SIZE) {
+      const batch = args.tokens.slice(i, i + RECORD_TOKEN_BATCH_SIZE);
+      await ctx.runMutation(
+        this.component.public.recordPushNotificationTokenBatch,
+        {
+          tokens: batch,
+          upsert: args.upsert,
+          logLevel: this.config.logLevel,
+        },
+      );
+    }
+    return null;
   }
 
   /**
