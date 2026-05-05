@@ -1,11 +1,15 @@
 # Claude Development Notes
 
+## Initialization
+
+Set up the repo with `npm i && npm run build && npx convex init`
+
 ## Codegen Command
 
 After making changes to component functions, run codegen with:
 
 ```bash
-cd example/ && npm run dev -- --once
+npm run build:codegen && npx convex dev --once
 ```
 
 ## Adding New Component Functions Pattern
