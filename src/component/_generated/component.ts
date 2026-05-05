@@ -139,7 +139,6 @@ export type ComponentApi<Name extends string | undefined = string | undefined> =
         {
           logLevel: "DEBUG" | "INFO" | "WARN" | "ERROR";
           tokens: Array<{ pushToken: string; userId: string }>;
-          upsert?: boolean;
         },
         null,
         Name
