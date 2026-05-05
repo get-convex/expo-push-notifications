@@ -61,24 +61,19 @@ export class PushNotifications<UserType extends string = GenericId<"users">> {
    * still process every batch in a single transaction.
    *
    * @param args.tokens List of `{ userId, pushToken }` pairs to record.
-   * @param args.upsert If true, overwrite the token for users that already
    * have one (matching {@link recordToken}'s behavior). If false or omitted,
    * existing tokens are left alone and only new users get a token recorded.
    */
   async recordTokenBatch(
     ctx: RunMutationCtx,
-    args: {
-      tokens: Array<{ userId: UserType; pushToken: string }>;
-      upsert?: boolean;
-    },
+    tokens: Array<{ userId: UserType; pushToken: string }>,
   ): Promise<null> {
-    for (let i = 0; i < args.tokens.length; i += RECORD_TOKEN_BATCH_SIZE) {
-      const batch = args.tokens.slice(i, i + RECORD_TOKEN_BATCH_SIZE);
+    for (let i = 0; i < tokens.length; i += RECORD_TOKEN_BATCH_SIZE) {
+      const batch = tokens.slice(i, i + RECORD_TOKEN_BATCH_SIZE);
       await ctx.runMutation(
         this.component.public.recordPushNotificationTokenBatch,
         {
           tokens: batch,
-          upsert: args.upsert,
           logLevel: this.config.logLevel,
         },
       );

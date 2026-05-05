@@ -1,9 +1,6 @@
 import { ConvexError, v, type Infer } from "convex/values";
 import { mutation, query, type MutationCtx } from "./functions.js";
-import {
-  BASE_BATCH_DELAY,
-  getFutureSegment,
-} from "./shared.js";
+import { BASE_BATCH_DELAY, getFutureSegment } from "./shared.js";
 import {
   notificationFields,
   notificationState,
@@ -48,10 +45,9 @@ export const recordPushNotificationTokenBatch = mutation({
         pushToken: v.string(),
       }),
     ),
-    upsert: v.optional(v.boolean()),
   },
   returns: v.null(),
-  handler: async (ctx, { tokens, upsert }) => {
+  handler: async (ctx, { tokens }) => {
     await Promise.all(
       tokens.map(async ({ userId, pushToken }) => {
         if (pushToken === "") {
@@ -63,12 +59,6 @@ export const recordPushNotificationTokenBatch = mutation({
           .withIndex("userId", (q) => q.eq("userId", userId))
           .unique();
         if (existingToken !== null) {
-          if (!upsert) {
-            ctx.logger.debug(
-              `Push token already exists for user ${userId}, skipping (upsert=false)`,
-            );
-            return;
-          }
           ctx.logger.debug(
             `Push token already exists for user ${userId}, updating token`,
           );
