@@ -79,7 +79,7 @@ describe("push notification pipeline", () => {
     );
 
     const fetchMock = vi.fn(
-      async () =>
+      async (_url: string, _init?: RequestInit) =>
         new Response(
           JSON.stringify({
             data: [
@@ -105,8 +105,10 @@ describe("push notification pipeline", () => {
       ],
     });
 
-    const sentHeaders = (fetchMock.mock.calls[0]?.[1] as RequestInit)
-      .headers as Record<string, string>;
+    const sentHeaders = fetchMock.mock.calls[0]![1]!.headers as Record<
+      string,
+      string
+    >;
     expect(sentHeaders.Authorization).toBeUndefined();
   });
 
@@ -123,7 +125,7 @@ describe("push notification pipeline", () => {
     );
 
     const fetchMock = vi.fn(
-      async () =>
+      async (_url: string, _init?: RequestInit) =>
         new Response(
           JSON.stringify({ data: [{ status: "ok", id: "ticket-x" }] }),
           { status: 200 },
@@ -137,8 +139,10 @@ describe("push notification pipeline", () => {
       expoAccessToken: "secret-abc",
     });
 
-    const sentHeaders = (fetchMock.mock.calls[0]?.[1] as RequestInit)
-      .headers as Record<string, string>;
+    const sentHeaders = fetchMock.mock.calls[0]![1]!.headers as Record<
+      string,
+      string
+    >;
     expect(sentHeaders.Authorization).toBe("Bearer secret-abc");
   });
 
