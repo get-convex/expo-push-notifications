@@ -41,10 +41,15 @@ const notificationPool = new Workpool(
 
 type SchedulingCtx = RawMutationCtx & {
   logger?: { level: LogLevel };
+  expoAccessToken?: string;
 };
 
 function getLogLevel(ctx: SchedulingCtx): LogLevel {
   return ctx.logger?.level ?? "INFO";
+}
+
+function getExpoAccessToken(ctx: SchedulingCtx): string | undefined {
+  return ctx.expoAccessToken;
 }
 
 async function upsertNextBatchRun(
@@ -147,6 +152,7 @@ async function syncNextBatchRun(
       reloop: false,
       segment,
       logLevel: getLogLevel(ctx),
+      expoAccessToken: getExpoAccessToken(ctx),
     },
   );
 
@@ -232,14 +238,18 @@ export const makeBatch = internalMutation({
     await notificationPool.enqueueAction(
       ctx,
       internal.expo.callExpoPushApiWithBatch,
-      { notificationIds, logLevel: ctx.logger.level },
+      {
+        notificationIds,
+        logLevel: ctx.logger.level,
+        expoAccessToken: ctx.expoAccessToken,
+      },
       {
         retry: {
           maxAttempts: options.retryAttempts,
           initialBackoffMs: options.initialBackoffMs,
           base: 2,
         },
-        context: { notificationIds },
+        context: { notificationIds, expoAccessToken: ctx.expoAccessToken },
         onComplete: internal.batch.onPushComplete,
       },
     );
@@ -250,6 +260,7 @@ export const makeBatch = internalMutation({
       reloop: true,
       segment: args.segment,
       logLevel: ctx.logger.level,
+      expoAccessToken: ctx.expoAccessToken,
     });
     await upsertNextBatchRun(ctx, runId, args.segment);
 
@@ -260,9 +271,14 @@ export const makeBatch = internalMutation({
 export const onPushComplete = notificationPool.defineOnComplete({
   context: v.object({
     notificationIds: v.array(v.id("notifications")),
+    expoAccessToken: v.optional(v.string()),
   }),
   handler: async (ctx, args) => {
-    const options = await getRuntimeConfig(ctx);
+    const ctxWithToken: SchedulingCtx = {
+      ...(ctx as RawMutationCtx),
+      expoAccessToken: args.context.expoAccessToken,
+    };
+    const options = await getRuntimeConfig(ctxWithToken);
 
     if (args.result.kind === "canceled") {
       for (const id of args.context.notificationIds) {
@@ -316,6 +332,6 @@ export const onPushComplete = notificationPool.defineOnComplete({
       }
     }
 
-    await scheduleBatchRun(ctx, options);
+    await scheduleBatchRun(ctxWithToken, options);
   },
 });

@@ -21,17 +21,28 @@ import type { ComponentApi } from "../component/_generated/component.js";
 export class PushNotifications<UserType extends string = GenericId<"users">> {
   private config: {
     logLevel: LogLevel;
+    expoAccessToken?: string;
   };
   constructor(
     public component: ComponentApi,
     config?: {
       logLevel?: LogLevel;
+      /**
+       * Expo access token used to authenticate requests to the Expo push API.
+       *
+       * When set, the token is sent as `Authorization: Bearer <token>` on every
+       * call to `https://exp.host/--/api/v2/push/send`. Required when the
+       * sending Expo project has Enhanced Security for Push Notifications
+       * enabled.
+       */
+      expoAccessToken?: string;
     },
   ) {
     this.component = component;
     this.config = {
       ...(config ?? {}),
       logLevel: config?.logLevel ?? "ERROR",
+      expoAccessToken: config?.expoAccessToken,
     };
   }
 
@@ -47,6 +58,7 @@ export class PushNotifications<UserType extends string = GenericId<"users">> {
     return ctx.runMutation(this.component.public.recordPushNotificationToken, {
       ...args,
       logLevel: this.config.logLevel,
+      expoAccessToken: this.config.expoAccessToken,
     });
   }
 
@@ -59,6 +71,7 @@ export class PushNotifications<UserType extends string = GenericId<"users">> {
     return ctx.runMutation(this.component.public.removePushNotificationToken, {
       ...args,
       logLevel: this.config.logLevel,
+      expoAccessToken: this.config.expoAccessToken,
     });
   }
 
@@ -69,6 +82,7 @@ export class PushNotifications<UserType extends string = GenericId<"users">> {
     return ctx.runQuery(this.component.public.getStatusForUser, {
       ...args,
       logLevel: this.config.logLevel,
+      expoAccessToken: this.config.expoAccessToken,
     });
   }
 
@@ -97,6 +111,7 @@ export class PushNotifications<UserType extends string = GenericId<"users">> {
     return ctx.runMutation(this.component.public.sendPushNotification, {
       ...args,
       logLevel: this.config.logLevel,
+      expoAccessToken: this.config.expoAccessToken,
     });
   }
 
@@ -120,6 +135,7 @@ export class PushNotifications<UserType extends string = GenericId<"users">> {
     return ctx.runMutation(this.component.public.sendPushNotificationBatch, {
       ...args,
       logLevel: this.config.logLevel,
+      expoAccessToken: this.config.expoAccessToken,
     });
   }
 
@@ -131,6 +147,7 @@ export class PushNotifications<UserType extends string = GenericId<"users">> {
     return ctx.runQuery(this.component.public.getNotification, {
       ...args,
       logLevel: this.config.logLevel,
+      expoAccessToken: this.config.expoAccessToken,
     });
   }
 
@@ -144,6 +161,7 @@ export class PushNotifications<UserType extends string = GenericId<"users">> {
     return ctx.runQuery(this.component.public.getNotificationsForUser, {
       ...args,
       logLevel: this.config.logLevel,
+      expoAccessToken: this.config.expoAccessToken,
     });
   }
 
@@ -154,6 +172,7 @@ export class PushNotifications<UserType extends string = GenericId<"users">> {
     return ctx.runMutation(this.component.public.deleteNotificationsForUser, {
       ...args,
       logLevel: this.config.logLevel,
+      expoAccessToken: this.config.expoAccessToken,
     });
   }
 
@@ -167,6 +186,7 @@ export class PushNotifications<UserType extends string = GenericId<"users">> {
     return ctx.runMutation(this.component.public.pauseNotificationsForUser, {
       ...args,
       logLevel: this.config.logLevel,
+      expoAccessToken: this.config.expoAccessToken,
     });
   }
 
@@ -180,6 +200,7 @@ export class PushNotifications<UserType extends string = GenericId<"users">> {
     return ctx.runMutation(this.component.public.unpauseNotificationsForUser, {
       ...args,
       logLevel: this.config.logLevel,
+      expoAccessToken: this.config.expoAccessToken,
     });
   }
 
@@ -195,6 +216,7 @@ export class PushNotifications<UserType extends string = GenericId<"users">> {
   shutdown(ctx: RunMutationCtx) {
     return ctx.runMutation(this.component.public.shutdown, {
       logLevel: this.config.logLevel,
+      expoAccessToken: this.config.expoAccessToken,
     });
   }
 
@@ -208,6 +230,7 @@ export class PushNotifications<UserType extends string = GenericId<"users">> {
   restart(ctx: RunMutationCtx): Promise<boolean> {
     return ctx.runMutation(this.component.public.restart, {
       logLevel: this.config.logLevel,
+      expoAccessToken: this.config.expoAccessToken,
     });
   }
 }

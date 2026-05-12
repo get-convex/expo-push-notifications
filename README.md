@@ -227,6 +227,19 @@ const pushNotifications = new PushNotifications(components.pushNotifications, {
 });
 ```
 
+To authenticate to the Expo push API (required if your Expo project has
+[Enhanced Security for Push Notifications](https://docs.expo.dev/push-notifications/sending-notifications/#additional-security)
+enabled), provide an `expoAccessToken`:
+
+```ts
+const pushNotifications = new PushNotifications(components.pushNotifications, {
+  expoAccessToken: process.env.EXPO_ACCESS_TOKEN,
+});
+```
+
+When set, the token is sent as `Authorization: Bearer <token>` on every call to
+`https://exp.host/--/api/v2/push/send`.
+
 The push notification sender can be shutdown gracefully, and then restarted
 using the `shutdown` and `restart` methods.
 

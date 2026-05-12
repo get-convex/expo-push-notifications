@@ -81,15 +81,20 @@ export const callExpoPushApiWithBatch = internalAction({
       controller.abort();
     }, EXPO_REQUEST_TIMEOUT_MS);
 
+    const headers: Record<string, string> = {
+      Accept: "application/json",
+      "Accept-encoding": "gzip, deflate",
+      "Content-Type": "application/json",
+    };
+    if (ctx.expoAccessToken) {
+      headers.Authorization = `Bearer ${ctx.expoAccessToken}`;
+    }
+
     let response: Response;
     try {
       response = await fetch("https://exp.host/--/api/v2/push/send", {
         method: "POST",
-        headers: {
-          Accept: "application/json",
-          "Accept-encoding": "gzip, deflate",
-          "Content-Type": "application/json",
-        },
+        headers,
         body: JSON.stringify(
           inProgress.map((notification) => ({
             to: notification.token,
