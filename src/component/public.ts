@@ -230,6 +230,7 @@ export const deleteNotificationsForUser = mutation({
       await ctx.scheduler.runAfter(0, api.public.deleteNotificationsForUser, {
         ...args,
         logLevel: ctx.logger.level,
+        expoAccessToken: ctx.expoAccessToken,
       });
     }
   },

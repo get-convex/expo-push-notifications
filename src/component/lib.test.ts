@@ -78,21 +78,19 @@ describe("push notification pipeline", () => {
       }),
     );
 
-    vi.stubGlobal(
-      "fetch",
-      vi.fn(
-        async () =>
-          new Response(
-            JSON.stringify({
-              data: [
-                { status: "ok", id: "ticket-1" },
-                { status: "error", message: "invalid token" },
-              ],
-            }),
-            { status: 200 },
-          ),
-      ),
+    const fetchMock = vi.fn(
+      async (_url: string, _init?: RequestInit) =>
+        new Response(
+          JSON.stringify({
+            data: [
+              { status: "ok", id: "ticket-1" },
+              { status: "error", message: "invalid token" },
+            ],
+          }),
+          { status: 200 },
+        ),
     );
+    vi.stubGlobal("fetch", fetchMock);
 
     const result = await t.action(internal.expo.callExpoPushApiWithBatch, {
       notificationIds: [id1, id2],
@@ -106,6 +104,46 @@ describe("push notification pipeline", () => {
         { id: id2, state: "failed", errorMessage: "invalid token" },
       ],
     });
+
+    const sentHeaders = fetchMock.mock.calls[0]![1]!.headers as Record<
+      string,
+      string
+    >;
+    expect(sentHeaders.Authorization).toBeUndefined();
+  });
+
+  it("sends Authorization: Bearer header when expoAccessToken is configured", async () => {
+    const id = await t.run(async (ctx: any) =>
+      ctx.db.insert("notifications", {
+        token: "ExponentPushToken[x]",
+        metadata: { title: "x" },
+        state: "in_progress",
+        numPreviousFailures: 0,
+        segment: 1,
+        finalizedAt: FINALIZED_EPOCH,
+      }),
+    );
+
+    const fetchMock = vi.fn(
+      async (_url: string, _init?: RequestInit) =>
+        new Response(
+          JSON.stringify({ data: [{ status: "ok", id: "ticket-x" }] }),
+          { status: 200 },
+        ),
+    );
+    vi.stubGlobal("fetch", fetchMock);
+
+    await t.action(internal.expo.callExpoPushApiWithBatch, {
+      notificationIds: [id],
+      logLevel: "ERROR",
+      expoAccessToken: "secret-abc",
+    });
+
+    const sentHeaders = fetchMock.mock.calls[0]![1]!.headers as Record<
+      string,
+      string
+    >;
+    expect(sentHeaders.Authorization).toBe("Bearer secret-abc");
   });
 
   it("marks MessageRateExceeded ticket errors as retryable", async () => {
