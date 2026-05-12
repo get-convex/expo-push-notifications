@@ -78,7 +78,7 @@
     "@typescript-eslint/eslint-plugin": "8.59.2",
     "@vitejs/plugin-react": "4.7.0",
     "chokidar-cli": "3.0.0",
-    "convex": "1.37.0",
+    "convex": "1.38.0",
     "convex-test": "0.0.51",
     "eslint": "9.39.4",
     "eslint-plugin-react-hooks": "7.1.1",
