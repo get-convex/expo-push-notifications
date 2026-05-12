@@ -65,7 +65,7 @@ async function upsertNextBatchRun(
   await ctx.db.insert("nextBatchRun", { runId, segment });
 }
 
-async function getRuntimeConfig(ctx: SchedulingCtx): Promise<RuntimeConfig> {
+async function getRuntimeConfig(ctx: RawMutationCtx): Promise<RuntimeConfig> {
   const options = await ctx.db.query("lastOptions").unique();
   if (options) {
     return {
@@ -274,11 +274,7 @@ export const onPushComplete = notificationPool.defineOnComplete({
     expoAccessToken: v.optional(v.string()),
   }),
   handler: async (ctx, args) => {
-    const ctxWithToken: SchedulingCtx = {
-      ...(ctx as RawMutationCtx),
-      expoAccessToken: args.context.expoAccessToken,
-    };
-    const options = await getRuntimeConfig(ctxWithToken);
+    const options = await getRuntimeConfig(ctx);
 
     if (args.result.kind === "canceled") {
       for (const id of args.context.notificationIds) {
@@ -332,6 +328,6 @@ export const onPushComplete = notificationPool.defineOnComplete({
       }
     }
 
-    await scheduleBatchRun(ctxWithToken, options);
+    await scheduleBatchRun(ctx, options);
   },
 });

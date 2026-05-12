@@ -29,11 +29,8 @@ export class PushNotifications<UserType extends string = GenericId<"users">> {
       logLevel?: LogLevel;
       /**
        * Expo access token used to authenticate requests to the Expo push API.
-       *
-       * When set, the token is sent as `Authorization: Bearer <token>` on every
-       * call to `https://exp.host/--/api/v2/push/send`. Required when the
-       * sending Expo project has Enhanced Security for Push Notifications
-       * enabled.
+       * Required when the sending Expo project has Enhanced Security for Push
+       * Notifications enabled.
        */
       expoAccessToken?: string;
     },

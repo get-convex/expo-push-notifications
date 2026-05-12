@@ -237,9 +237,6 @@ const pushNotifications = new PushNotifications(components.pushNotifications, {
 });
 ```
 
-When set, the token is sent as `Authorization: Bearer <token>` on every call to
-`https://exp.host/--/api/v2/push/send`.
-
 The push notification sender can be shutdown gracefully, and then restarted
 using the `shutdown` and `restart` methods.
 
