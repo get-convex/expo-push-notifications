@@ -1,9 +1,6 @@
 import { ConvexError, v, type Infer } from "convex/values";
 import { mutation, query, type MutationCtx } from "./functions.js";
-import {
-  BASE_BATCH_DELAY,
-  getFutureSegment,
-} from "./shared.js";
+import { BASE_BATCH_DELAY, getFutureSegment } from "./shared.js";
 import {
   notificationFields,
   notificationState,
@@ -37,6 +34,43 @@ export const recordPushNotificationToken = mutation({
       return;
     }
     await ctx.db.insert("pushTokens", { userId, token: pushToken });
+  },
+});
+
+export const recordPushNotificationTokenBatch = mutation({
+  args: {
+    tokens: v.array(
+      v.object({
+        userId: v.string(),
+        pushToken: v.string(),
+      }),
+    ),
+  },
+  returns: v.null(),
+  handler: async (ctx, { tokens }) => {
+    await Promise.all(
+      tokens.map(async ({ userId, pushToken }) => {
+        if (pushToken === "") {
+          ctx.logger.debug(`Push token is empty for user ${userId}, skipping`);
+          return;
+        }
+        const existingToken = await ctx.db
+          .query("pushTokens")
+          .withIndex("userId", (q) => q.eq("userId", userId))
+          .unique();
+        if (existingToken !== null) {
+          ctx.logger.debug(
+            `Push token already exists for user ${userId}, updating token`,
+          );
+          await ctx.db.patch("pushTokens", existingToken._id, {
+            token: pushToken,
+          });
+          return;
+        }
+        await ctx.db.insert("pushTokens", { userId, token: pushToken });
+      }),
+    );
+    return null;
   },
 });
 
