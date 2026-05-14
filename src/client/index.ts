@@ -8,7 +8,7 @@ import type { NotificationFields } from "../component/schema.js";
 import type { LogLevel } from "../logging/index.js";
 import type { ComponentApi } from "../component/_generated/component.js";
 
-const RECORD_TOKEN_BATCH_SIZE = 4000;
+const RECORD_TOKEN_BATCH_SIZE = 1000;
 
 /**
  * This component uses Expo's push notification API
