@@ -60,9 +60,11 @@ export class PushNotifications<UserType extends string = GenericId<"users">> {
    * each batch lands in its own transaction; calling from a mutation will
    * still process every batch in a single transaction.
    *
-   * @param args.tokens List of `{ userId, pushToken }` pairs to record.
-   * have one (matching {@link recordToken}'s behavior). If false or omitted,
-   * existing tokens are left alone and only new users get a token recorded.
+   * Each token is upserted: if a token already exists for a user it is
+   * overwritten, otherwise a new one is inserted (matching
+   * {@link recordToken}'s behavior).
+   *
+   * @param tokens List of `{ userId, pushToken }` pairs to record.
    */
   async recordTokenBatch(
     ctx: RunMutationCtx,
