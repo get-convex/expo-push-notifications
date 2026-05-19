@@ -1,5 +1,6 @@
 /// <reference types="vite/client" />
 import type { TestConvex } from "convex-test";
+import workpool from "@convex-dev/workpool/test";
 import schema from "./component/schema.js";
 import type { SchemaDefinition, GenericSchema } from "convex/server";
 const modules = import.meta.glob("./component/**/*.ts");
@@ -13,6 +14,7 @@ export function register(
   t: TestConvex<SchemaDefinition<GenericSchema, boolean>>,
   name: string = "pushNotifications",
 ) {
-  t.registerComponent(name, schema as any, modules as any);
+  t.registerComponent(name, schema, modules);
+  workpool.register(t, name + "/pushNotificationWorkpool");
 }
 export default { register, schema, modules };
