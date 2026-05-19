@@ -1,12 +1,10 @@
 # Changelog
 
-## 0.4.1-beta.0
+## 0.4.1 beta
 
-Exclude test files from build.
-
-## 0.4.0-beta.0
-
-Switch to workpool + rate limiter instead of custom runner.
+- Switch to workpool + rate limiter instead of custom runner.
+- Exclude test files from build.
+- Fix test fixture to register nested Workpool
 
 ## 0.3.1
 
