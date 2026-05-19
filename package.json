@@ -67,7 +67,7 @@
   "dependencies": {
     "@convex-dev/rate-limiter": "^0.3.0",
     "@convex-dev/workpool": "^0.4.0",
-    "convex-helpers": "0.1.116"
+    "convex-helpers": "0.1.118"
   },
   "devDependencies": {
     "@convex-dev/eslint-plugin": "2.0.0",
@@ -78,7 +78,7 @@
     "@typescript-eslint/eslint-plugin": "8.59.3",
     "@vitejs/plugin-react": "4.7.0",
     "chokidar-cli": "3.0.0",
-    "convex": "1.38.0",
+    "convex": "1.39.1",
     "convex-test": "0.0.52",
     "eslint": "9.39.4",
     "eslint-plugin-react-hooks": "7.1.1",
