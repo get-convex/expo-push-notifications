@@ -16,8 +16,7 @@
     "@react-navigation/bottom-tabs": "^7.4.0",
     "@react-navigation/elements": "^2.6.3",
     "@react-navigation/native": "^7.1.8",
-    "convex": "^1.28.2",
-    "convex-test": "^0.0.52",
+    "convex": "file:../node_modules/convex",
     "expo": "~54.0.33",
     "expo-constants": "~18.0.10",
     "expo-device": "~8.0.9",
@@ -44,6 +43,7 @@
   },
   "devDependencies": {
     "@types/react": "19.2.14",
+    "convex-test": "0.0.52",
     "eslint": "9.39.4",
     "eslint-config-expo": "10.0.0",
     "typescript": "6.0.3"
