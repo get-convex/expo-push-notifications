@@ -105,6 +105,35 @@ const pushNotifications = new PushNotifications<Email>(
 );
 ```
 
+### Authenticating with an Expo access token (optional)
+
+If your Expo project has
+[enhanced push security](https://docs.expo.dev/push-notifications/sending-notifications/#additional-security)
+enabled, every request to the Expo push API must include an access token. To
+opt in, generate a token from your Expo access tokens settings,
+set it as a Convex environment variable in your deployment:
+
+```bash
+npx convex env set EXPO_ACCESS_TOKEN <your-token>
+```
+
+and forward it to the component via `app.use`:
+
+```ts
+// convex/convex.config.ts
+const app = defineApp({
+  env: {
+    EXPO_ACCESS_TOKEN: v.optional(v.string()),
+  },
+});
+
+app.use(pushNotifications, {
+  env: {
+    EXPO_ACCESS_TOKEN: app.env.EXPO_ACCESS_TOKEN,
+  }
+});
+```
+
 ## Registering a user for push notifications
 
 Get a user's push notification token following the Expo documentation

@@ -3,6 +3,7 @@ import { RateLimiter } from "@convex-dev/rate-limiter";
 import type { ComponentApi as RateLimiterComponentApi } from "@convex-dev/rate-limiter/_generated/component.js";
 import { components, internal } from "./_generated/api.js";
 import type { Id } from "./_generated/dataModel.js";
+import { env } from "./_generated/server.js";
 import { internalAction } from "./functions.js";
 import { EXPO_ONE_CALL_EVERY_MS } from "./shared.js";
 
@@ -89,6 +90,9 @@ export const callExpoPushApiWithBatch = internalAction({
           Accept: "application/json",
           "Accept-encoding": "gzip, deflate",
           "Content-Type": "application/json",
+          ...(env.EXPO_ACCESS_TOKEN && {
+            Authorization: `Bearer ${env.EXPO_ACCESS_TOKEN}`,
+          }),
         },
         body: JSON.stringify(
           inProgress.map((notification) => ({
