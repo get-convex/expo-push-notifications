@@ -1,8 +1,3 @@
-import {
-  type GenericDataModel,
-  type GenericMutationCtx,
-  type GenericQueryCtx,
-} from "convex/server";
 import { type Infer, v, type VString } from "convex/values";
 
 // https://docs.expo.dev/push-notifications/sending-notifications/#message-request-format
@@ -191,13 +186,4 @@ export function getDelayUntilSegment(now: number, segment: number) {
 export const DEFAULT_RUNTIME_CONFIG: RuntimeConfig = {
   initialBackoffMs: 500,
   retryAttempts: 5,
-};
-
-/* Type utils follow */
-
-export type RunQueryCtx = {
-  runQuery: GenericQueryCtx<GenericDataModel>["runQuery"];
-};
-export type RunMutationCtx = {
-  runMutation: GenericMutationCtx<GenericDataModel>["runMutation"];
 };
