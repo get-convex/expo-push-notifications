@@ -1,4 +1,5 @@
 import type {
+  GenericActionCtx,
   GenericDataModel,
   GenericMutationCtx,
   GenericQueryCtx,
@@ -43,7 +44,7 @@ export class PushNotifications<UserType extends string = GenericId<"users">> {
    * This allows sending notifications for this user using this token.
    */
   recordToken(
-    ctx: RunMutationCtx,
+    ctx: MutationCtx | ActionCtx,
     args: { userId: UserType; pushToken: string },
   ): Promise<null> {
     return ctx.runMutation(this.component.public.recordPushNotificationToken, {
@@ -67,7 +68,7 @@ export class PushNotifications<UserType extends string = GenericId<"users">> {
    * @param tokens List of `{ userId, pushToken }` pairs to record.
    */
   async recordTokenBatch(
-    ctx: RunMutationCtx,
+    ctx: MutationCtx | ActionCtx,
     tokens: Array<{ userId: UserType; pushToken: string }>,
   ): Promise<null> {
     for (let i = 0; i < tokens.length; i += RECORD_TOKEN_BATCH_SIZE) {
@@ -88,7 +89,10 @@ export class PushNotifications<UserType extends string = GenericId<"users">> {
    *
    * Once this is run, notifications can no longer be sent to this user.
    */
-  removeToken(ctx: RunMutationCtx, args: { userId: UserType }): Promise<null> {
+  removeToken(
+    ctx: MutationCtx | ActionCtx,
+    args: { userId: UserType },
+  ): Promise<null> {
     return ctx.runMutation(this.component.public.removePushNotificationToken, {
       ...args,
       logLevel: this.config.logLevel,
@@ -98,7 +102,10 @@ export class PushNotifications<UserType extends string = GenericId<"users">> {
   /**
    * Gets the status of a user: whether they have a token and whether notifications are paused.
    */
-  getStatusForUser(ctx: RunQueryCtx, args: { userId: UserType }) {
+  getStatusForUser(
+    ctx: QueryCtx | MutationCtx | ActionCtx,
+    args: { userId: UserType },
+  ) {
     return ctx.runQuery(this.component.public.getStatusForUser, {
       ...args,
       logLevel: this.config.logLevel,
@@ -120,7 +127,7 @@ export class PushNotifications<UserType extends string = GenericId<"users">> {
    * @throws ConvexError if the user has no token and allowUnregisteredTokens is false.
    */
   sendPushNotification(
-    ctx: RunMutationCtx,
+    ctx: MutationCtx | ActionCtx,
     args: {
       userId: UserType;
       notification: NotificationFields;
@@ -141,7 +148,7 @@ export class PushNotifications<UserType extends string = GenericId<"users">> {
    * @returns Promise resolving when all notifications are processed
    */
   sendPushNotificationBatch(
-    ctx: RunMutationCtx,
+    ctx: MutationCtx | ActionCtx,
     args: {
       notifications: Array<{
         userId: UserType;
@@ -160,7 +167,10 @@ export class PushNotifications<UserType extends string = GenericId<"users">> {
    * Gets the notification by ID returned from {@link sendPushNotification}.
    * Returns null if there is no record of a notification with that ID.
    */
-  getNotification(ctx: RunQueryCtx, args: { id: string }) {
+  getNotification(
+    ctx: QueryCtx | MutationCtx | ActionCtx,
+    args: { id: string },
+  ) {
     return ctx.runQuery(this.component.public.getNotification, {
       ...args,
       logLevel: this.config.logLevel,
@@ -171,7 +181,7 @@ export class PushNotifications<UserType extends string = GenericId<"users">> {
    * Gets the most recent notifications for a user, up to `limit` (default 1000)
    */
   getNotificationsForUser(
-    ctx: RunQueryCtx,
+    ctx: QueryCtx | MutationCtx | ActionCtx,
     args: { userId: UserType; limit?: number },
   ) {
     return ctx.runQuery(this.component.public.getNotificationsForUser, {
@@ -183,7 +193,10 @@ export class PushNotifications<UserType extends string = GenericId<"users">> {
   /**
    * Deletes all notifications for a user.
    */
-  deleteNotificationsForUser(ctx: RunMutationCtx, args: { userId: UserType }) {
+  deleteNotificationsForUser(
+    ctx: MutationCtx | ActionCtx,
+    args: { userId: UserType },
+  ) {
     return ctx.runMutation(this.component.public.deleteNotificationsForUser, {
       ...args,
       logLevel: this.config.logLevel,
@@ -196,7 +209,10 @@ export class PushNotifications<UserType extends string = GenericId<"users">> {
    *
    * Notifications sent while paused will be dropped and will not be retried.
    */
-  pauseNotificationsForUser(ctx: RunMutationCtx, args: { userId: UserType }) {
+  pauseNotificationsForUser(
+    ctx: MutationCtx | ActionCtx,
+    args: { userId: UserType },
+  ) {
     return ctx.runMutation(this.component.public.pauseNotificationsForUser, {
       ...args,
       logLevel: this.config.logLevel,
@@ -209,7 +225,10 @@ export class PushNotifications<UserType extends string = GenericId<"users">> {
    * @param args
    * @returns
    */
-  unpauseNotificationsForUser(ctx: RunMutationCtx, args: { userId: UserType }) {
+  unpauseNotificationsForUser(
+    ctx: MutationCtx | ActionCtx,
+    args: { userId: UserType },
+  ) {
     return ctx.runMutation(this.component.public.unpauseNotificationsForUser, {
       ...args,
       logLevel: this.config.logLevel,
@@ -225,7 +244,7 @@ export class PushNotifications<UserType extends string = GenericId<"users">> {
    * @param ctx
    * @returns
    */
-  shutdown(ctx: RunMutationCtx) {
+  shutdown(ctx: MutationCtx | ActionCtx) {
     return ctx.runMutation(this.component.public.shutdown, {
       logLevel: this.config.logLevel,
     });
@@ -238,7 +257,7 @@ export class PushNotifications<UserType extends string = GenericId<"users">> {
    * @param ctx
    * @returns {boolean} true if the restart was successful, false if it was not (i.e. if there are still jobs in progress)
    */
-  restart(ctx: RunMutationCtx): Promise<boolean> {
+  restart(ctx: MutationCtx | ActionCtx): Promise<boolean> {
     return ctx.runMutation(this.component.public.restart, {
       logLevel: this.config.logLevel,
     });
@@ -247,9 +266,12 @@ export class PushNotifications<UserType extends string = GenericId<"users">> {
 
 /* Type utils follow */
 
-type RunQueryCtx = {
-  runQuery: GenericQueryCtx<GenericDataModel>["runQuery"];
-};
-type RunMutationCtx = {
-  runMutation: GenericMutationCtx<GenericDataModel>["runMutation"];
-};
+type QueryCtx = Pick<GenericQueryCtx<GenericDataModel>, "runQuery">;
+type MutationCtx = Pick<
+  GenericMutationCtx<GenericDataModel>,
+  "runQuery" | "runMutation"
+>;
+type ActionCtx = Pick<
+  GenericActionCtx<GenericDataModel>,
+  "runQuery" | "runMutation" | "runAction"
+>;
