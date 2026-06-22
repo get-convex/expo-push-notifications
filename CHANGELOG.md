@@ -5,6 +5,7 @@
 - Switch to workpool + rate limiter instead of custom runner.
 - Exclude test files from build.
 - Fix test fixture to register nested Workpool
+- Improves the `ctx` arg types to be more compatible with convex 1.41+
 
 ## 0.3.1
 
