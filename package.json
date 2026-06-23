@@ -21,7 +21,7 @@
     "dev:expo": "cd example && npx expo start",
     "dev:build": "chokidar 'tsconfig*.json' 'src/**/*.ts' -i '**/*.test.ts' -c 'npm run build:codegen' --initial",
     "predev": "convex init && npm run build:codegen",
-    "setup": "npm install && cd example && npm install && cd .. && npm run dev:backend -- --until-success && printf 'EXPO_PUBLIC_CONVEX_URL=' >> example/.env.local && npx convex env get CONVEX_CLOUD_URL >> example/.env.local",
+    "setup": "npm install && cd example && npm install && cd .. && npm run build:codegen && npx convex dev --until-success && printf 'EXPO_PUBLIC_CONVEX_URL=' >> example/.env.local && npx convex env get CONVEX_CLOUD_URL >> example/.env.local",
     "build": "tsc --project ./tsconfig.build.json",
     "build:codegen": "npx convex codegen --component-dir ./src/component && npm run build",
     "build:clean": "rm -rf dist *.tsbuildinfo && npm run build:codegen",
