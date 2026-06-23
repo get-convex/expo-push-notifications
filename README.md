@@ -77,7 +77,7 @@ import { defineApp } from "convex/server";
 import pushNotifications from "@convex-dev/expo-push-notifications/convex.config.js";
 
 const app = defineApp();
-app.use(pushNotifications);
+app.use(pushNotifications, { env: {} });
 // other components
 
 export default app;
