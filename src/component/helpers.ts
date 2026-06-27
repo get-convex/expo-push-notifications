@@ -1,17 +1,14 @@
 import type { MutationCtx } from "./functions.js";
-import { DEFAULT_RUNTIME_CONFIG } from "./shared.js";
-import { cancelPendingBatches, scheduleBatchRun } from "./batch.js";
+import { cancelPendingBatches, pingWorker, stopWorker } from "./batch.js";
 
 export async function ensureBatchRunScheduled(ctx: MutationCtx) {
-  await scheduleBatchRun(ctx, DEFAULT_RUNTIME_CONFIG);
+  await pingWorker(ctx);
 }
 
 export const shutdownGracefully = async (ctx: MutationCtx) => {
-  const nextBatchRun = await ctx.db.query("nextBatchRun").unique();
-  if (nextBatchRun) {
-    await ctx.scheduler.cancel(nextBatchRun.runId);
-    await ctx.db.delete("nextBatchRun", nextBatchRun._id);
-  }
+  // Halt the batch-worker loop so it stops picking up new work, then cancel any
+  // in-flight workpool sends.
+  await stopWorker(ctx);
   await cancelPendingBatches(ctx);
   const inProgressNotifications = await ctx.db
     .query("notifications")
