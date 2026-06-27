@@ -13,10 +13,6 @@ export const notificationState = vNotificationStatus;
 export const FINALIZED_EPOCH = Number.MAX_SAFE_INTEGER;
 
 export default defineSchema({
-  nextBatchRun: defineTable({
-    runId: v.id("_scheduled_functions"),
-    segment: v.number(),
-  }),
   lastOptions: defineTable({
     initialBackoffMs: v.number(),
     retryAttempts: v.number(),
@@ -43,9 +39,6 @@ export default defineSchema({
     token: v.string(),
     notificationsPaused: v.optional(v.boolean()),
   }).index("userId", ["userId"]),
-  config: defineTable({
-    state: v.union(v.literal("running"), v.literal("shutting_down")),
-  }),
 });
 
 export type NotificationMetadata = NotificationFields;

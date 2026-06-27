@@ -7,6 +7,7 @@ import {
   FINALIZED_EPOCH,
 } from "./schema.js";
 import { ensureBatchRunScheduled, shutdownGracefully } from "./helpers.js";
+import { startWorker } from "./batch.js";
 import { api } from "./_generated/api.js";
 
 const DEFAULT_LIMIT = 1000;
@@ -341,17 +342,6 @@ export const shutdown = mutation({
     if (inProgressCount === 0) {
       return { message: "success" };
     }
-    const config = await ctx.db.query("config").unique();
-    if (config === null) {
-      ctx.logger.debug("No config found, creating it");
-      await ctx.db.insert("config", {
-        state: "shutting_down",
-      });
-    } else {
-      await ctx.db.patch("config", config._id, {
-        state: "shutting_down",
-      });
-    }
     return {
       message: `There are ${inProgressCount} notification jobs still draining. Wait a few seconds for them to finish and then restart the service.`,
       data: {
@@ -375,16 +365,7 @@ export const restart = mutation({
       );
       return false;
     }
-    const config = await ctx.db.query("config").unique();
-    if (config !== null) {
-      await ctx.db.patch("config", config._id, {
-        state: "running",
-      });
-    } else {
-      await ctx.db.insert("config", {
-        state: "running",
-      });
-    }
+    await startWorker(ctx);
     await ensureBatchRunScheduled(ctx);
     return true;
   },
