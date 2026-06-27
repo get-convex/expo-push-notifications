@@ -1,5 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { api, internal } from "./_generated/api.js";
+import { api, components, internal } from "./_generated/api.js";
 import { setupTest, type Tester } from "./setup.test.js";
 import { FINALIZED_EPOCH } from "./schema.js";
 import { BASE_BATCH_DELAY, SEGMENT_MS } from "./shared.js";
@@ -19,7 +19,7 @@ describe("push notification pipeline", () => {
     vi.useRealTimers();
   });
 
-  it("records notification with compatibility defaults and schedules a batch", async () => {
+  it("records notification with compatibility defaults and pings the worker", async () => {
     const expectedSegment = Math.floor(
       (1_000_000 + BASE_BATCH_DELAY + SEGMENT_MS - 1) / SEGMENT_MS,
     );
@@ -49,11 +49,11 @@ describe("push notification pipeline", () => {
     expect(typeof notification!.segment).toBe("number");
     expect(notification!.segment).toBe(expectedSegment);
 
-    const nextBatchRun = await t.run(async (ctx: any) => {
-      return await ctx.db.query("nextBatchRun").unique();
-    });
-    expect(nextBatchRun).not.toBeNull();
-    expect(nextBatchRun!.segment).toBe(notification!.segment);
+    const status = await t.run(async (ctx: any) =>
+      ctx.runQuery(components.batchWorker.lib.status, { name: "expoPush" }),
+    );
+    expect(status).not.toBeNull();
+    expect(status?.kind).toBe("running");
   });
 
   it("maps Expo success/error response items", async () => {
@@ -324,66 +324,123 @@ describe("push notification pipeline", () => {
     expect(notification?.errorMessage).toBeUndefined();
   });
 
-  it("reschedules a deferred partial reloop after the current run", async () => {
+  it("getBatch returns eligible notifications as work", async () => {
     const currentSegment = Math.floor(1_000_000 / SEGMENT_MS);
-    const futureSegment = Math.floor(
-      (1_000_000 + BASE_BATCH_DELAY + SEGMENT_MS - 1) / SEGMENT_MS,
-    );
-
-    await t.run(async (ctx: any) => {
-      const runId = await ctx.scheduler.runAfter(0, internal.batch.makeBatch, {
-        reloop: true,
-        segment: currentSegment,
-        logLevel: "ERROR",
-      });
-      await ctx.db.insert("nextBatchRun", {
-        runId,
-        segment: currentSegment,
-      });
-      await ctx.db.insert("notifications", {
+    const id = await t.run(async (ctx: any) =>
+      ctx.db.insert("notifications", {
         token: "ExponentPushToken[one]",
         metadata: { title: "one" },
         state: "awaiting_delivery",
         numPreviousFailures: 0,
         segment: currentSegment,
         finalizedAt: FINALIZED_EPOCH,
-      });
-    });
+      }),
+    );
 
-    await t.mutation(internal.batch.makeBatch, {
-      reloop: true,
-      segment: currentSegment,
-      logLevel: "ERROR",
-    });
-
-    const nextBatchRun = await t.run(async (ctx: any) => {
-      return await ctx.db.query("nextBatchRun").unique();
-    });
-
-    expect(nextBatchRun?.segment).toBe(futureSegment);
+    const result = await t.query(internal.batch.getBatch, { name: "expoPush" });
+    expect(result.kind).toBe("work");
+    expect(result.kind === "work" && result.batch.notificationIds).toEqual([id]);
   });
 
-  it("does not enqueue work when a queued batch runs during shutdown", async () => {
-    const id = await t.run(async (ctx: any) => {
-      await ctx.db.insert("config", { state: "shutting_down" });
-      return await ctx.db.insert("notifications", {
+  it("getBatch goes idle with a timeout when only future work remains", async () => {
+    const currentSegment = Math.floor(1_000_000 / SEGMENT_MS);
+    const futureSegment = currentSegment + 100;
+    await t.run(async (ctx: any) =>
+      ctx.db.insert("notifications", {
+        token: "ExponentPushToken[future]",
+        metadata: { title: "future" },
+        state: "needs_retry",
+        numPreviousFailures: 1,
+        segment: futureSegment,
+        finalizedAt: FINALIZED_EPOCH,
+      }),
+    );
+
+    const result = await t.query(internal.batch.getBatch, { name: "expoPush" });
+    expect(result.kind).toBe("idle");
+    expect(result.kind === "idle" && result.timeoutMs).toBeGreaterThan(0);
+  });
+
+  it("getBatch goes idle with no timeout when the queue is empty", async () => {
+    const result = await t.query(internal.batch.getBatch, { name: "expoPush" });
+    expect(result).toEqual({ kind: "idle" });
+  });
+
+  it("processBatch reserves deliverable notifications as in_progress", async () => {
+    const id = await t.run(async (ctx: any) =>
+      ctx.db.insert("notifications", {
         token: "ExponentPushToken[one]",
         metadata: { title: "one" },
         state: "awaiting_delivery",
         numPreviousFailures: 0,
         segment: 1,
         finalizedAt: FINALIZED_EPOCH,
-      });
-    });
+      }),
+    );
 
-    await t.mutation(internal.batch.makeBatch, {
-      reloop: false,
-      segment: 1,
+    await t.mutation(internal.batch.processBatch, { notificationIds: [id] });
+
+    const notification = await t.run(async (ctx: any) =>
+      ctx.db.get("notifications", id),
+    );
+    expect(notification?.state).toBe("in_progress");
+  });
+
+  it("processBatch finalizes notifications that exhausted their retries", async () => {
+    const id = await t.run(async (ctx: any) =>
+      ctx.db.insert("notifications", {
+        token: "ExponentPushToken[one]",
+        metadata: { title: "one" },
+        state: "needs_retry",
+        numPreviousFailures: 5,
+        segment: 1,
+        finalizedAt: FINALIZED_EPOCH,
+      }),
+    );
+
+    await t.mutation(internal.batch.processBatch, { notificationIds: [id] });
+
+    const notification = await t.run(async (ctx: any) =>
+      ctx.db.get("notifications", id),
+    );
+    expect(notification?.state).toBe("unable_to_deliver");
+  });
+
+  it("shutdown stops the worker; restart resumes it", async () => {
+    await t.mutation(api.public.recordPushNotificationToken, {
+      userId: "user-1",
+      pushToken: "ExponentPushToken[abc123]",
+      logLevel: "ERROR",
+    });
+    await t.mutation(api.public.sendPushNotification, {
+      userId: "user-1",
+      notification: { title: "hello" },
       logLevel: "ERROR",
     });
 
-    const notification = await t.run(async (ctx: any) => ctx.db.get("notifications", id));
-    expect(notification?.state).toBe("awaiting_delivery");
+    const readStatus = () =>
+      t.run(async (ctx: any) =>
+        ctx.runQuery(components.batchWorker.lib.status, { name: "expoPush" }),
+      );
+
+    expect((await readStatus())?.kind).toBe("running");
+
+    await t.mutation(api.public.shutdown, { logLevel: "ERROR" });
+    expect((await readStatus())?.kind).toBe("stopped");
+
+    // A ping while stopped is a no-op — the worker stays stopped.
+    await t.mutation(api.public.sendPushNotification, {
+      userId: "user-1",
+      notification: { title: "while stopped" },
+      logLevel: "ERROR",
+    });
+    expect((await readStatus())?.kind).toBe("stopped");
+
+    const restarted = await t.mutation(api.public.restart, {
+      logLevel: "ERROR",
+    });
+    expect(restarted).toBe(true);
+    expect((await readStatus())?.kind).toBe("running");
   });
 
   it("marks exhausted whole-batch failures as maybe_delivered", async () => {
