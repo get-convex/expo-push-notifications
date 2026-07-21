@@ -177,6 +177,13 @@ export const sendPushNotification = mutation({
 });
 ```
 
+The `notification` object supports the fields of the
+[Expo push message format](https://docs.expo.dev/push-notifications/sending-notifications/#message-request-format),
+including `collapseId` and `tag` for collapsing/replacing notifications instead
+of stacking them (on Android, `tag` replaces already-displayed notifications
+while `collapseId` only coalesces messages in transit; on iOS, `collapseId`
+does both).
+
 You can use the ID returned from `sendPushNotifications` to query the status of
 the notification using `getNotification`. Using this in a query allows you to
 subscribe to the status of a notification.

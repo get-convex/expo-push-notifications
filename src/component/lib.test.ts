@@ -56,6 +56,31 @@ describe("push notification pipeline", () => {
     expect(nextBatchRun!.segment).toBe(notification!.segment);
   });
 
+  it("passes collapseId and tag through to the stored notification", async () => {
+    await t.mutation(api.public.recordPushNotificationToken, {
+      userId: "user-1",
+      pushToken: "ExponentPushToken[abc123]",
+      logLevel: "ERROR",
+    });
+
+    const notificationId = await t.mutation(api.public.sendPushNotification, {
+      userId: "user-1",
+      notification: {
+        title: "hello",
+        collapseId: "task-assigned",
+        tag: "task-assigned",
+      },
+      logLevel: "ERROR",
+    });
+
+    const notification = await t.run(async (ctx: any) => {
+      return await ctx.db.get("notifications", notificationId!);
+    });
+
+    expect(notification!.metadata.collapseId).toBe("task-assigned");
+    expect(notification!.metadata.tag).toBe("task-assigned");
+  });
+
   it("maps Expo success/error response items", async () => {
     const id1 = await t.run(async (ctx: any) =>
       ctx.db.insert("notifications", {
