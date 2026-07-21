@@ -23,18 +23,21 @@ const RECORD_TOKEN_BATCH_SIZE = 1000;
  */
 export class PushNotifications<UserType extends string = GenericId<"users">> {
   private config: {
-    logLevel: LogLevel;
+    logLevel?: LogLevel;
   };
   constructor(
     public component: ComponentApi,
     config?: {
+      /**
+       * @deprecated Set the `LOG_LEVEL` component environment variable instead.
+       */
       logLevel?: LogLevel;
     },
   ) {
     this.component = component;
     this.config = {
       ...(config ?? {}),
-      logLevel: config?.logLevel ?? "ERROR",
+      logLevel: config?.logLevel,
     };
   }
 

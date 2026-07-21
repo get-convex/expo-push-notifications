@@ -35,6 +35,7 @@ import type { DataModel } from "./dataModel.js";
  */
 type Env = {
   readonly EXPO_ACCESS_TOKEN: string | undefined;
+  readonly LOG_LEVEL: "DEBUG" | "INFO" | "WARN" | "ERROR" | undefined;
 };
 
 /**
