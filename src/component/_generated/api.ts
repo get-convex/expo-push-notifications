@@ -64,4 +64,5 @@ export const internal: FilterApi<
 export const components = componentsGeneric() as unknown as {
   rateLimiter: import("@convex-dev/rate-limiter/_generated/component.js").ComponentApi<"rateLimiter">;
   pushNotificationWorkpool: import("@convex-dev/workpool/_generated/component.js").ComponentApi<"pushNotificationWorkpool">;
+  batchWorker: import("@convex-dev/batch-worker/_generated/component.js").ComponentApi<"batchWorker">;
 };

@@ -2,6 +2,7 @@ import { defineComponent } from "convex/server";
 import { v } from "convex/values";
 import rateLimiter from "@convex-dev/rate-limiter/convex.config";
 import workpool from "@convex-dev/workpool/convex.config";
+import batchWorker from "@convex-dev/batch-worker/convex.config";
 import { logLevelValidator } from "../logging/index.js";
 
 const component = defineComponent("pushNotifications", {
@@ -12,5 +13,6 @@ const component = defineComponent("pushNotifications", {
 });
 component.use(rateLimiter);
 component.use(workpool, { name: "pushNotificationWorkpool" });
+component.use(batchWorker);
 
 export default component;

@@ -1,16 +1,21 @@
 import { v } from "convex/values";
 import { Workpool } from "@convex-dev/workpool";
 import type { ComponentApi as WorkpoolComponentApi } from "@convex-dev/workpool/_generated/component.js";
+import {
+  ping,
+  vBatchQueryArgs,
+  vBatchResult,
+  vWorkerResult,
+} from "@convex-dev/batch-worker";
 import { components, internal } from "./_generated/api.js";
 import type { MutationCtx as RawMutationCtx } from "./_generated/server.js";
-import type { Id } from "./_generated/dataModel.js";
-import { internalMutation } from "./functions.js";
+import type { Doc, Id } from "./_generated/dataModel.js";
+import { internalMutation, internalQuery } from "./functions.js";
 import {
   BATCH_SIZE,
   BASE_BATCH_DELAY,
   DEFAULT_RUNTIME_CONFIG,
   getDelayUntilSegment,
-  getFutureSegment,
   getSegment,
   type RuntimeConfig,
 } from "./shared.js";
@@ -27,6 +32,7 @@ import {
 } from "./notifs.js";
 import type { LogLevel } from "../logging/index.js";
 const POOL_MAX_PARALLELISM = 8;
+const WORKER_NAME = "expoPush";
 
 const componentRefs: {
   pushNotificationWorkpool: WorkpoolComponentApi<"pushNotificationWorkpool">;
@@ -43,23 +49,6 @@ type SchedulingCtx = RawMutationCtx & {
   logger?: { level: LogLevel };
 };
 
-function getLogLevel(ctx: SchedulingCtx): LogLevel {
-  return ctx.logger?.level ?? "INFO";
-}
-
-async function upsertNextBatchRun(
-  ctx: SchedulingCtx,
-  runId: Id<"_scheduled_functions">,
-  segment: number,
-) {
-  const existing = await ctx.db.query("nextBatchRun").unique();
-  if (existing) {
-    await ctx.db.patch("nextBatchRun", existing._id, { runId, segment });
-    return;
-  }
-  await ctx.db.insert("nextBatchRun", { runId, segment });
-}
-
 async function getRuntimeConfig(ctx: SchedulingCtx): Promise<RuntimeConfig> {
   const options = await ctx.db.query("lastOptions").unique();
   if (options) {
@@ -72,157 +61,103 @@ async function getRuntimeConfig(ctx: SchedulingCtx): Promise<RuntimeConfig> {
   return DEFAULT_RUNTIME_CONFIG;
 }
 
-async function upsertRuntimeConfig(ctx: SchedulingCtx, options: RuntimeConfig) {
-  const lastOptions = await ctx.db.query("lastOptions").unique();
-  if (!lastOptions) {
-    await ctx.db.insert("lastOptions", options);
-    return;
-  }
-  if (
-    lastOptions.initialBackoffMs !== options.initialBackoffMs ||
-    lastOptions.retryAttempts !== options.retryAttempts
-  ) {
-    await ctx.db.patch("lastOptions", lastOptions._id, options);
-  }
-}
-
-async function isShuttingDown(ctx: SchedulingCtx) {
-  const config = await ctx.db.query("config").unique();
-  return config?.state === "shutting_down";
-}
-
-async function getEarliestPendingSegment(ctx: SchedulingCtx) {
-  return await getEarliestPendingNotificationSegment(ctx, getSegment(Date.now()));
-}
-
-async function syncNextBatchRun(
-  ctx: SchedulingCtx,
-  segment: number | null,
-) {
-  const existing = await ctx.db.query("nextBatchRun").unique();
-  const now = Date.now();
-  const currentSegment = getSegment(now);
-
-  if (segment === null) {
-    // No queued work remains, so clear the scheduler marker. If the recorded
-    // run is still in the future, cancel it; if it is the run currently
-    // executing, just drop the row so the state machine no longer thinks a
-    // future wake-up exists.
-    if (existing) {
-      if (
-        typeof existing.segment !== "number" ||
-        existing.segment > currentSegment
-      ) {
-        await ctx.scheduler.cancel(existing.runId);
-      }
-      await ctx.db.delete("nextBatchRun", existing._id);
-    }
-    return;
-  }
-
-  if (existing && typeof existing.segment === "number") {
-    // Keep an already-scheduled future wake-up if it will fire no later than
-    // the segment we want. This is the "scheduler is already armed" state.
-    if (existing.segment > currentSegment && existing.segment <= segment) {
-      return;
-    }
-    // Otherwise replace the recorded run. Future runs are canceled; stale rows
-    // from the currently executing segment are just removed and superseded.
-    if (existing.segment > currentSegment) {
-      await ctx.scheduler.cancel(existing.runId);
-    }
-    await ctx.db.delete("nextBatchRun", existing._id);
-  } else if (existing) {
-    // Defensive cleanup for older rows that predate the `segment` field.
-    await ctx.scheduler.cancel(existing.runId);
-    await ctx.db.delete("nextBatchRun", existing._id);
-  }
-
-  // Record the next wake-up that advances the batcher state machine back into
-  // `makeBatch` at the chosen eligible segment.
-  const runId = await ctx.scheduler.runAfter(
-    getDelayUntilSegment(now, segment),
-    internal.batch.makeBatch,
-    {
-      reloop: false,
-      segment,
-      logLevel: getLogLevel(ctx),
-    },
-  );
-
-  await upsertNextBatchRun(ctx, runId, segment);
-}
-
-export async function scheduleBatchRun(
-  ctx: SchedulingCtx,
-  options: RuntimeConfig,
-  minimumSegment?: number,
-) {
-  await upsertRuntimeConfig(ctx, options);
-
-  if (await isShuttingDown(ctx)) {
-    return;
-  }
-
-  const pendingSegment = await getEarliestPendingSegment(ctx);
-  const segment =
-    pendingSegment === null
-      ? null
-      : Math.max(pendingSegment, minimumSegment ?? pendingSegment);
-  await syncNextBatchRun(ctx, segment);
+/**
+ * Make sure the batch-worker loop is running. Call it right after inserting
+ * work (and after `onPushComplete` schedules retries). Idempotent — a no-op
+ * while the loop is already running or stopped.
+ */
+export async function pingWorker(ctx: RawMutationCtx) {
+  await ping(ctx, components.batchWorker, {
+    name: WORKER_NAME,
+    workQuery: internal.batch.getBatch,
+    workerMutation: internal.batch.processBatch,
+    config: { debounceMs: BASE_BATCH_DELAY },
+  });
 }
 
 export async function cancelPendingBatches(ctx: RawMutationCtx) {
   await notificationPool.cancelAll(ctx);
 }
 
-export const makeBatch = internalMutation({
-  args: { reloop: v.boolean(), segment: v.number() },
-  returns: v.null(),
-  handler: async (ctx, args) => {
-    const options = await getRuntimeConfig(ctx);
-    if (await isShuttingDown(ctx)) {
-      return null;
-    }
+export async function stopWorker(ctx: RawMutationCtx) {
+  await ctx.runMutation(components.batchWorker.lib.stop, { name: WORKER_NAME });
+}
 
-    // Pull the notifications that are eligible for this scheduler segment,
-    // prioritizing retries ahead of brand new deliveries.
-    const notifications = await getEligibleNotificationsForBatch(
+export async function startWorker(ctx: RawMutationCtx) {
+  await ctx.runMutation(components.batchWorker.lib.start, { name: WORKER_NAME });
+}
+
+/**
+ * Work query: returns the next batch of eligible notifications, or `idle`. When
+ * the only pending work is scheduled for a future segment (a retry waiting out
+ * its backoff), returns `idle` with a `timeoutMs` so the loop wakes when it's
+ * due.
+ *
+ * Uses vanilla `internalQuery` (not the logLevel-wrapped one) because
+ * batch-worker invokes it with only `{ name }`.
+ */
+export const getBatch = internalQuery({
+  args: vBatchQueryArgs,
+  returns: vBatchResult(
+    v.object({ notificationIds: v.array(v.id("notifications")) }),
+  ),
+  handler: async (ctx) => {
+    const segment = getSegment(Date.now());
+    const eligible = await getEligibleNotificationsForBatch(
       ctx,
-      args.segment,
+      segment,
       BATCH_SIZE,
     );
+    if (eligible.length > 0) {
+      return {
+        kind: "work" as const,
+        batch: { notificationIds: eligible.map((n) => n._id) },
+      };
+    }
+    const earliest = await getEarliestPendingNotificationSegment(ctx, segment);
+    if (earliest !== null) {
+      return {
+        kind: "idle" as const,
+        timeoutMs: getDelayUntilSegment(Date.now(), earliest),
+      };
+    }
+    return { kind: "idle" as const };
+  },
+});
 
-    // Finalize notifications that have exhausted retries and keep the rest in
-    // the candidate batch for this pass.
-    const notificationsToSend =
-      await finalizeExhaustedAndReturnDeliverableNotifications(
-      ctx,
-      notifications,
-      options.retryAttempts,
+/**
+ * Worker mutation: finalizes exhausted retries, reserves the rest by marking
+ * them `in_progress` (which removes them from the eligible set so the next
+ * query won't return them again), and hands the concrete Expo send to workpool.
+ * Returning nothing re-runs immediately to drain the rest.
+ *
+ * Uses vanilla `internalMutation` because batch-worker invokes it with only the
+ * batch args.
+ */
+export const processBatch = internalMutation({
+  args: { notificationIds: v.array(v.id("notifications")) },
+  returns: vWorkerResult,
+  handler: async (ctx, args) => {
+    const options = await getRuntimeConfig(ctx);
+    const docs = await Promise.all(
+      args.notificationIds.map((id) => ctx.db.get("notifications", id)),
+    );
+    const notifications = docs.filter(
+      (n): n is Doc<"notifications"> => n !== null,
     );
 
-    if (notificationsToSend.length === 0) {
-      // Nothing is ready to send in this segment, so re-sync the scheduler with
-      // whatever queued work remains.
-      await scheduleBatchRun(ctx, options);
-      return null;
-    }
-
-    if (args.reloop && notificationsToSend.length < BATCH_SIZE) {
-      // We already dispatched a batch in this cycle. If the immediate follow-up
-      // pass only finds a small remainder, defer it by one batching window
-      // instead of sending a tiny trailing batch right away.
-      await scheduleBatchRun(
+    const notificationsToSend =
+      await finalizeExhaustedAndReturnDeliverableNotifications(
         ctx,
-        options,
-        getFutureSegment(Date.now(), BASE_BATCH_DELAY),
+        notifications,
+        options.retryAttempts,
       );
+
+    if (notificationsToSend.length === 0) {
       return null;
     }
 
-    // Reserve these notifications for the outgoing workpool job so no other
-    // batch pass tries to pick them up concurrently.
+    // Reserve these notifications so no other batch pass picks them up.
     await markNotificationsInProgress(ctx, notificationsToSend);
 
     const notificationIds = notificationsToSend.map((n) => n._id);
@@ -243,15 +178,6 @@ export const makeBatch = internalMutation({
         onComplete: internal.batch.onPushComplete,
       },
     );
-
-    // Immediately re-enter `makeBatch` so the batcher can keep draining any
-    // additional already-eligible work without waiting for another timed wakeup.
-    const runId = await ctx.scheduler.runAfter(0, internal.batch.makeBatch, {
-      reloop: true,
-      segment: args.segment,
-      logLevel: ctx.logger.level,
-    });
-    await upsertNextBatchRun(ctx, runId, args.segment);
 
     return null;
   },
@@ -316,6 +242,8 @@ export const onPushComplete = notificationPool.defineOnComplete({
       }
     }
 
-    await scheduleBatchRun(ctx, options);
+    // Wake the loop so it picks up retries scheduled above. If they're in a
+    // future segment, `getBatch` returns idle with the right `timeoutMs`.
+    await pingWorker(ctx);
   },
 });
