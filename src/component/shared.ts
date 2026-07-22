@@ -25,6 +25,8 @@ export const notificationFields = {
   channelId: v.optional(v.string()),
   categoryId: v.optional(v.string()),
   mutableContent: v.optional(v.boolean()),
+  collapseId: v.optional(v.string()),
+  tag: v.optional(v.string()),
 };
 
 /**
@@ -142,6 +144,26 @@ export type NotificationFields = {
    * Defaults to false.
    */
   mutableContent?: boolean;
+
+  /**
+   * Android and iOS
+   *
+   * An identifier for collapsing notifications. On Android, this only coalesces
+   * messages in transit (maps to the FCM collapse_key); use tag to also replace
+   * notifications already displayed on the device. On iOS, this both coalesces
+   * messages in transit and replaces already-displayed notifications
+   * (maps to apns-collapse-id).
+   */
+  collapseId?: string;
+
+  /**
+   * Android Only
+   *
+   * An identifier for replacing notifications already displayed on the device.
+   * If the device is already showing a notification with the same tag, the new
+   * notification replaces it. Maps to the FCM notification.tag field.
+   */
+  tag?: string;
 };
 
 export const vNotificationStatus = v.union(
