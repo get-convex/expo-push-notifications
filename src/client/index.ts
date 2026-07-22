@@ -22,9 +22,7 @@ const RECORD_TOKEN_BATCH_SIZE = 1000;
  * `type Email = string & { __isEmail: true }`).
  */
 export class PushNotifications<UserType extends string = GenericId<"users">> {
-  private config: {
-    logLevel?: LogLevel;
-  };
+  private logLevel?: LogLevel;
   constructor(
     public component: ComponentApi,
     config?: {
@@ -35,10 +33,7 @@ export class PushNotifications<UserType extends string = GenericId<"users">> {
     },
   ) {
     this.component = component;
-    this.config = {
-      ...(config ?? {}),
-      logLevel: config?.logLevel,
-    };
+    this.logLevel = config?.logLevel;
   }
 
   /**
@@ -52,7 +47,7 @@ export class PushNotifications<UserType extends string = GenericId<"users">> {
   ): Promise<null> {
     return ctx.runMutation(this.component.public.recordPushNotificationToken, {
       ...args,
-      logLevel: this.config.logLevel,
+      logLevel: this.logLevel,
     });
   }
 
@@ -80,7 +75,7 @@ export class PushNotifications<UserType extends string = GenericId<"users">> {
         this.component.public.recordPushNotificationTokenBatch,
         {
           tokens: batch,
-          logLevel: this.config.logLevel,
+          logLevel: this.logLevel,
         },
       );
     }
@@ -98,7 +93,7 @@ export class PushNotifications<UserType extends string = GenericId<"users">> {
   ): Promise<null> {
     return ctx.runMutation(this.component.public.removePushNotificationToken, {
       ...args,
-      logLevel: this.config.logLevel,
+      logLevel: this.logLevel,
     });
   }
 
@@ -111,7 +106,7 @@ export class PushNotifications<UserType extends string = GenericId<"users">> {
   ) {
     return ctx.runQuery(this.component.public.getStatusForUser, {
       ...args,
-      logLevel: this.config.logLevel,
+      logLevel: this.logLevel,
     });
   }
 
@@ -139,7 +134,7 @@ export class PushNotifications<UserType extends string = GenericId<"users">> {
   ) {
     return ctx.runMutation(this.component.public.sendPushNotification, {
       ...args,
-      logLevel: this.config.logLevel,
+      logLevel: this.logLevel,
     });
   }
 
@@ -162,7 +157,7 @@ export class PushNotifications<UserType extends string = GenericId<"users">> {
   ) {
     return ctx.runMutation(this.component.public.sendPushNotificationBatch, {
       ...args,
-      logLevel: this.config.logLevel,
+      logLevel: this.logLevel,
     });
   }
 
@@ -176,7 +171,7 @@ export class PushNotifications<UserType extends string = GenericId<"users">> {
   ) {
     return ctx.runQuery(this.component.public.getNotification, {
       ...args,
-      logLevel: this.config.logLevel,
+      logLevel: this.logLevel,
     });
   }
 
@@ -189,7 +184,7 @@ export class PushNotifications<UserType extends string = GenericId<"users">> {
   ) {
     return ctx.runQuery(this.component.public.getNotificationsForUser, {
       ...args,
-      logLevel: this.config.logLevel,
+      logLevel: this.logLevel,
     });
   }
 
@@ -202,7 +197,7 @@ export class PushNotifications<UserType extends string = GenericId<"users">> {
   ) {
     return ctx.runMutation(this.component.public.deleteNotificationsForUser, {
       ...args,
-      logLevel: this.config.logLevel,
+      logLevel: this.logLevel,
     });
   }
 
@@ -218,7 +213,7 @@ export class PushNotifications<UserType extends string = GenericId<"users">> {
   ) {
     return ctx.runMutation(this.component.public.pauseNotificationsForUser, {
       ...args,
-      logLevel: this.config.logLevel,
+      logLevel: this.logLevel,
     });
   }
 
@@ -234,7 +229,7 @@ export class PushNotifications<UserType extends string = GenericId<"users">> {
   ) {
     return ctx.runMutation(this.component.public.unpauseNotificationsForUser, {
       ...args,
-      logLevel: this.config.logLevel,
+      logLevel: this.logLevel,
     });
   }
 
@@ -249,7 +244,7 @@ export class PushNotifications<UserType extends string = GenericId<"users">> {
    */
   shutdown(ctx: MutationCtx | ActionCtx) {
     return ctx.runMutation(this.component.public.shutdown, {
-      logLevel: this.config.logLevel,
+      logLevel: this.logLevel,
     });
   }
 
@@ -262,7 +257,7 @@ export class PushNotifications<UserType extends string = GenericId<"users">> {
    */
   restart(ctx: MutationCtx | ActionCtx): Promise<boolean> {
     return ctx.runMutation(this.component.public.restart, {
-      logLevel: this.config.logLevel,
+      logLevel: this.logLevel,
     });
   }
 }
