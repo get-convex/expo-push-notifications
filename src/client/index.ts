@@ -8,6 +8,7 @@ import type { GenericId } from "convex/values";
 import type { NotificationFields } from "../component/schema.js";
 import type { LogLevel } from "../logging/index.js";
 import type { ComponentApi } from "../component/_generated/component.js";
+import { DEFAULT_RUNTIME_CONFIG, type RuntimeConfig } from "../component/shared.js";
 
 const RECORD_TOKEN_BATCH_SIZE = 1000;
 
@@ -23,6 +24,7 @@ const RECORD_TOKEN_BATCH_SIZE = 1000;
  */
 export class PushNotifications<UserType extends string = GenericId<"users">> {
   private logLevel?: LogLevel;
+  private runtimeConfig: RuntimeConfig;
   constructor(
     public component: ComponentApi,
     config?: {
@@ -30,10 +32,27 @@ export class PushNotifications<UserType extends string = GenericId<"users">> {
        * @deprecated Set the `LOG_LEVEL` component environment variable instead.
        */
       logLevel?: LogLevel;
+      /**
+       * Base delay in milliseconds for the exponential backoff applied between
+       * delivery retries. Retry N waits `initialBackoffMs * 2 ** (N - 1)` ms,
+       * capped at 15 minutes. Defaults to 500.
+       */
+      initialBackoffMs?: number;
+      /**
+       * Maximum number of delivery attempts for a notification before it is
+       * marked `unable_to_deliver`. Defaults to 5.
+       */
+      retryAttempts?: number;
     },
   ) {
     this.component = component;
     this.logLevel = config?.logLevel;
+    this.runtimeConfig = {
+      initialBackoffMs:
+        config?.initialBackoffMs ?? DEFAULT_RUNTIME_CONFIG.initialBackoffMs,
+      retryAttempts:
+        config?.retryAttempts ?? DEFAULT_RUNTIME_CONFIG.retryAttempts,
+    };
   }
 
   /**
@@ -135,6 +154,7 @@ export class PushNotifications<UserType extends string = GenericId<"users">> {
     return ctx.runMutation(this.component.public.sendPushNotification, {
       ...args,
       logLevel: this.logLevel,
+      runtimeConfig: this.runtimeConfig,
     });
   }
 
@@ -158,6 +178,7 @@ export class PushNotifications<UserType extends string = GenericId<"users">> {
     return ctx.runMutation(this.component.public.sendPushNotificationBatch, {
       ...args,
       logLevel: this.logLevel,
+      runtimeConfig: this.runtimeConfig,
     });
   }
 

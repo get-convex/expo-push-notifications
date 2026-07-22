@@ -183,6 +183,7 @@ export type ComponentApi<Name extends string | undefined = string | undefined> =
             title?: string;
             ttl?: number;
           };
+          runtimeConfig?: { initialBackoffMs: number; retryAttempts: number };
           userId: string;
         },
         string | null,
@@ -217,6 +218,7 @@ export type ComponentApi<Name extends string | undefined = string | undefined> =
             };
             userId: string;
           }>;
+          runtimeConfig?: { initialBackoffMs: number; retryAttempts: number };
         },
         Array<string | null>,
         Name

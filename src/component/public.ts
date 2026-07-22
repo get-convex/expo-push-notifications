@@ -1,6 +1,6 @@
 import { ConvexError, v, type Infer } from "convex/values";
 import { mutation, query, type MutationCtx } from "./functions.js";
-import { BASE_BATCH_DELAY, getFutureSegment } from "./shared.js";
+import { BASE_BATCH_DELAY, getFutureSegment, vRuntimeConfig } from "./shared.js";
 import {
   notificationFields,
   notificationState,
@@ -96,6 +96,7 @@ const sendPushNotificationArgs = v.object({
   userId: v.string(),
   notification: v.object(notificationFields),
   allowUnregisteredTokens: v.optional(v.boolean()),
+  runtimeConfig: v.optional(vRuntimeConfig),
 });
 
 export const sendPushNotification = mutation({
@@ -103,7 +104,7 @@ export const sendPushNotification = mutation({
   returns: v.union(v.id("notifications"), v.null()),
   handler: async (ctx, args) => {
     const result = await sendPushNotificationHandler(ctx, args);
-    await ensureBatchRunScheduled(ctx);
+    await ensureBatchRunScheduled(ctx, args.runtimeConfig);
     return result;
   },
 });
@@ -117,6 +118,7 @@ export const sendPushNotificationBatch = mutation({
       }),
     ),
     allowUnregisteredTokens: v.optional(v.boolean()),
+    runtimeConfig: v.optional(vRuntimeConfig),
   },
   returns: v.array(v.union(v.id("notifications"), v.null())),
   handler: async (ctx, args) => {
@@ -129,7 +131,7 @@ export const sendPushNotificationBatch = mutation({
       });
       results.push(result);
     }
-    await ensureBatchRunScheduled(ctx);
+    await ensureBatchRunScheduled(ctx, args.runtimeConfig);
     return results;
   },
 });
