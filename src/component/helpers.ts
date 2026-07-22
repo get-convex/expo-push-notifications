@@ -1,9 +1,12 @@
 import type { MutationCtx } from "./functions.js";
-import { DEFAULT_RUNTIME_CONFIG } from "./shared.js";
+import type { RuntimeConfig } from "./shared.js";
 import { cancelPendingBatches, scheduleBatchRun } from "./batch.js";
 
-export async function ensureBatchRunScheduled(ctx: MutationCtx) {
-  await scheduleBatchRun(ctx, DEFAULT_RUNTIME_CONFIG);
+export async function ensureBatchRunScheduled(
+  ctx: MutationCtx,
+  config?: RuntimeConfig,
+) {
+  await scheduleBatchRun(ctx, config);
 }
 
 export const shutdownGracefully = async (ctx: MutationCtx) => {

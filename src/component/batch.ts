@@ -155,10 +155,14 @@ async function syncNextBatchRun(
 
 export async function scheduleBatchRun(
   ctx: SchedulingCtx,
-  options: RuntimeConfig,
+  options?: RuntimeConfig,
   minimumSegment?: number,
 ) {
-  await upsertRuntimeConfig(ctx, options);
+  // Only persist config when the caller supplied it; omitting it (e.g. on
+  // restart) leaves the previously stored runtime config untouched.
+  if (options) {
+    await upsertRuntimeConfig(ctx, options);
+  }
 
   if (await isShuttingDown(ctx)) {
     return;
