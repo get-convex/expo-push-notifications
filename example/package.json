@@ -46,7 +46,7 @@
     "convex-test": "0.0.53",
     "eslint": "9.39.4",
     "eslint-config-expo": "10.0.0",
-    "typescript": "6.0.3"
+    "typescript": "7.0.2"
   },
   "private": true
 }
