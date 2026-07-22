@@ -247,12 +247,13 @@ You can also view all notifications for a user with `getNotificationsForUser`.
 
 ## Troubleshooting
 
-To add more logging, provide `PushNotifications` with a `logLevel` in the
-constructor:
+To add more logging, set the `LOG_LEVEL` environment variable for the component:
 
 ```ts
-const pushNotifications = new PushNotifications(components.pushNotifications, {
-  logLevel: "DEBUG",
+app.use(pushNotifications, {
+  env: {
+    LOG_LEVEL: "DEBUG",
+  }
 });
 ```
 
