@@ -72,20 +72,6 @@ async function getRuntimeConfig(ctx: SchedulingCtx): Promise<RuntimeConfig> {
   return DEFAULT_RUNTIME_CONFIG;
 }
 
-async function upsertRuntimeConfig(ctx: SchedulingCtx, options: RuntimeConfig) {
-  const lastOptions = await ctx.db.query("lastOptions").unique();
-  if (!lastOptions) {
-    await ctx.db.insert("lastOptions", options);
-    return;
-  }
-  if (
-    lastOptions.initialBackoffMs !== options.initialBackoffMs ||
-    lastOptions.retryAttempts !== options.retryAttempts
-  ) {
-    await ctx.db.patch("lastOptions", lastOptions._id, options);
-  }
-}
-
 async function isShuttingDown(ctx: SchedulingCtx) {
   const config = await ctx.db.query("config").unique();
   return config?.state === "shutting_down";
@@ -155,11 +141,8 @@ async function syncNextBatchRun(
 
 export async function scheduleBatchRun(
   ctx: SchedulingCtx,
-  options: RuntimeConfig,
   minimumSegment?: number,
 ) {
-  await upsertRuntimeConfig(ctx, options);
-
   if (await isShuttingDown(ctx)) {
     return;
   }
@@ -205,7 +188,7 @@ export const makeBatch = internalMutation({
     if (notificationsToSend.length === 0) {
       // Nothing is ready to send in this segment, so re-sync the scheduler with
       // whatever queued work remains.
-      await scheduleBatchRun(ctx, options);
+      await scheduleBatchRun(ctx);
       return null;
     }
 
@@ -215,7 +198,6 @@ export const makeBatch = internalMutation({
       // instead of sending a tiny trailing batch right away.
       await scheduleBatchRun(
         ctx,
-        options,
         getFutureSegment(Date.now(), BASE_BATCH_DELAY),
       );
       return null;
@@ -316,6 +298,6 @@ export const onPushComplete = notificationPool.defineOnComplete({
       }
     }
 
-    await scheduleBatchRun(ctx, options);
+    await scheduleBatchRun(ctx);
   },
 });
