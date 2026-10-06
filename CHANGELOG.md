@@ -6,6 +6,9 @@
 - Exclude test files from build.
 - Fix test fixture to register nested Workpool
 - Improves the `ctx` arg types to be more compatible with convex 1.41+
+- add EXPO_ACCESS_TOKEN component env (#89)
+- add LOG_LEVEL component env var and deprecate config field (#100)- Add
+  collapseId and tag pass-through to notification fields (#99)
 
 ## 0.3.1
 
