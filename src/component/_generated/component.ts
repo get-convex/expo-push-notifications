@@ -42,13 +42,11 @@ export type ComponentApi<Name extends string | undefined = string | undefined> =
           body?: string;
           categoryId?: string;
           channelId?: string;
+          collapseId?: string;
           data?: any;
           expiration?: number;
           interruptionLevel?:
-            | "active"
-            | "critical"
-            | "passive"
-            | "time-sensitive";
+            "active" | "critical" | "passive" | "time-sensitive";
           mutableContent?: boolean;
           numPreviousFailures: number;
           priority?: "default" | "normal" | "high";
@@ -62,6 +60,7 @@ export type ComponentApi<Name extends string | undefined = string | undefined> =
             | "maybe_delivered"
             | "unable_to_deliver";
           subtitle?: string;
+          tag?: string;
           title?: string;
           ttl?: number;
         },
@@ -82,14 +81,12 @@ export type ComponentApi<Name extends string | undefined = string | undefined> =
           body?: string;
           categoryId?: string;
           channelId?: string;
+          collapseId?: string;
           data?: any;
           expiration?: number;
           id: string;
           interruptionLevel?:
-            | "active"
-            | "critical"
-            | "passive"
-            | "time-sensitive";
+            "active" | "critical" | "passive" | "time-sensitive";
           mutableContent?: boolean;
           numPreviousFailures: number;
           priority?: "default" | "normal" | "high";
@@ -103,6 +100,7 @@ export type ComponentApi<Name extends string | undefined = string | undefined> =
             | "maybe_delivered"
             | "unable_to_deliver";
           subtitle?: string;
+          tag?: string;
           title?: string;
           ttl?: number;
         }>,
@@ -169,17 +167,16 @@ export type ComponentApi<Name extends string | undefined = string | undefined> =
             body?: string;
             categoryId?: string;
             channelId?: string;
+            collapseId?: string;
             data?: any;
             expiration?: number;
             interruptionLevel?:
-              | "active"
-              | "critical"
-              | "passive"
-              | "time-sensitive";
+              "active" | "critical" | "passive" | "time-sensitive";
             mutableContent?: boolean;
             priority?: "default" | "normal" | "high";
             sound?: string | null;
             subtitle?: string;
+            tag?: string;
             title?: string;
             ttl?: number;
           };
@@ -201,17 +198,16 @@ export type ComponentApi<Name extends string | undefined = string | undefined> =
               body?: string;
               categoryId?: string;
               channelId?: string;
+              collapseId?: string;
               data?: any;
               expiration?: number;
               interruptionLevel?:
-                | "active"
-                | "critical"
-                | "passive"
-                | "time-sensitive";
+                "active" | "critical" | "passive" | "time-sensitive";
               mutableContent?: boolean;
               priority?: "default" | "normal" | "high";
               sound?: string | null;
               subtitle?: string;
+              tag?: string;
               title?: string;
               ttl?: number;
             };
