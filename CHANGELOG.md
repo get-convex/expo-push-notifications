@@ -1,6 +1,6 @@
 # Changelog
 
-## 0.4.1 beta
+## 0.4.1
 
 - Switch to workpool + rate limiter instead of custom runner.
 - Exclude test files from build.
@@ -9,6 +9,8 @@
 - add EXPO_ACCESS_TOKEN component env (#89)
 - add LOG_LEVEL component env var and deprecate config field (#100)- Add
   collapseId and tag pass-through to notification fields (#99)
+- Updates the /test entrypoint for compatibility with convex-test's new
+  `defineTestApp` capability.
 
 ## 0.3.1
 
