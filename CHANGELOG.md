@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.4.2
+
+- Include `src/test.ts` in the release
+
 ## 0.4.1
 
 - Switch to workpool + rate limiter instead of custom runner.
