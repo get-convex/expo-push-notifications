@@ -4,7 +4,6 @@ import workpool from "@convex-dev/workpool/test";
 import type { ComponentApi } from "./component/_generated/component.js";
 import schema from "./component/schema.js";
 import type { SchemaDefinition, GenericSchema } from "convex/server";
-import { componentsGeneric } from "convex/server";
 const modules = import.meta.glob("./component/**/*.ts");
 
 /**
@@ -18,8 +17,7 @@ export function register(
   t: TestConvex<SchemaDefinition<GenericSchema, boolean>>,
   name: string = "pushNotifications",
 ) {
-  t.registerComponent(name, schema, modules);
   workpool.register(t, name + "/pushNotificationWorkpool");
-  return componentsGeneric()[name] as unknown as ComponentApi;
+  return t.registerComponent(name, schema, modules) as unknown as ComponentApi;
 }
 export default { register, schema, modules };
